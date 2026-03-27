@@ -161,10 +161,13 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                 .setProductList(products)
                 .build();
 
-        billingClient.queryProductDetailsAsync(params, (result, detailsList) -> {
-            boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
-            String json = productDetailsToJson(detailsList);
-            listener.onProductDetailsResult(ok, json, result.getDebugMessage());
+        billingClient.queryProductDetailsAsync(params, new ProductDetailsResponseListener() {
+            @Override
+            public void onProductDetailsResponse(BillingResult result, List<ProductDetails> detailsList) {
+                boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
+                String json = productDetailsToJson(detailsList);
+                listener.onProductDetailsResult(ok, json, result.getDebugMessage());
+            }
         });
     }
 
@@ -198,34 +201,40 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                     .setProductList(products)
                     .build();
 
-            billingClient.queryProductDetailsAsync(qParams, (result, list) -> {
-                if (result.getResponseCode() != BillingClient.BillingResponseCode.OK
-                        || list == null || list.isEmpty()) {
-                    if (purchaseListener != null) {
-                        purchaseListener.onPurchaseResult(
-                                result.getResponseCode(), "[]",
-                                "Failed to get product details for purchase flow");
+            billingClient.queryProductDetailsAsync(qParams, new ProductDetailsResponseListener() {
+                @Override
+                public void onProductDetailsResponse(BillingResult result, List<ProductDetails> list) {
+                    if (result.getResponseCode() != BillingClient.BillingResponseCode.OK
+                            || list == null || list.isEmpty()) {
+                        if (purchaseListener != null) {
+                            purchaseListener.onPurchaseResult(
+                                    result.getResponseCode(), "[]",
+                                    "Failed to get product details for purchase flow");
+                        }
+                        return;
                     }
-                    return;
+
+                    ProductDetails details = list.get(0);
+                    BillingFlowParams.ProductDetailsParams.Builder pdBuilder =
+                            BillingFlowParams.ProductDetailsParams.newBuilder()
+                                    .setProductDetails(details);
+
+                    if (offerToken != null && !offerToken.isEmpty()) {
+                        pdBuilder.setOfferToken(offerToken);
+                    }
+
+                    final BillingFlowParams flowParams = BillingFlowParams.newBuilder()
+                            .setProductDetailsParamsList(
+                                    Collections.singletonList(pdBuilder.build()))
+                            .build();
+
+                    activity.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            billingClient.launchBillingFlow(activity, flowParams);
+                        }
+                    });
                 }
-
-                ProductDetails details = list.get(0);
-                BillingFlowParams.ProductDetailsParams.Builder pdBuilder =
-                        BillingFlowParams.ProductDetailsParams.newBuilder()
-                                .setProductDetails(details);
-
-                if (offerToken != null && !offerToken.isEmpty()) {
-                    pdBuilder.setOfferToken(offerToken);
-                }
-
-                BillingFlowParams flowParams = BillingFlowParams.newBuilder()
-                        .setProductDetailsParamsList(
-                                Collections.singletonList(pdBuilder.build()))
-                        .build();
-
-                activity.runOnUiThread(() -> {
-                    billingClient.launchBillingFlow(activity, flowParams);
-                });
             });
             return 0;
         } catch (Exception e) {
@@ -251,9 +260,12 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                 .setPurchaseToken(purchaseToken)
                 .build();
 
-        billingClient.consumeAsync(params, (result, token) -> {
-            boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
-            listener.onConsumeResult(ok, token, result.getDebugMessage());
+        billingClient.consumeAsync(params, new ConsumeResponseListener() {
+            @Override
+            public void onConsumeResponse(BillingResult result, String token) {
+                boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
+                listener.onConsumeResult(ok, token, result.getDebugMessage());
+            }
         });
     }
 
@@ -269,9 +281,12 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                 .setPurchaseToken(purchaseToken)
                 .build();
 
-        billingClient.acknowledgePurchase(params, result -> {
-            boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
-            listener.onAcknowledgeResult(ok, result.getDebugMessage());
+        billingClient.acknowledgePurchase(params, new AcknowledgePurchaseResponseListener() {
+            @Override
+            public void onAcknowledgePurchaseResponse(BillingResult result) {
+                boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
+                listener.onAcknowledgeResult(ok, result.getDebugMessage());
+            }
         });
     }
 
@@ -287,10 +302,13 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                 .setProductType(productType)
                 .build();
 
-        billingClient.queryPurchasesAsync(params, (result, purchases) -> {
-            boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
-            listener.onQueryPurchasesResult(ok, purchasesToJson(purchases),
-                    result.getDebugMessage());
+        billingClient.queryPurchasesAsync(params, new PurchasesResponseListener() {
+            @Override
+            public void onQueryPurchasesResponse(BillingResult result, List<Purchase> purchases) {
+                boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
+                listener.onQueryPurchasesResult(ok, purchasesToJson(purchases),
+                        result.getDebugMessage());
+            }
         });
     }
 
@@ -314,10 +332,13 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                 .setProductType(productType)
                 .build();
 
-        billingClient.queryPurchaseHistoryAsync(params, (result, historyList) -> {
-            boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
-            listener.onPurchaseHistoryResult(ok, purchaseHistoryToJson(historyList),
-                    result.getDebugMessage());
+        billingClient.queryPurchaseHistoryAsync(params, new PurchaseHistoryResponseListener() {
+            @Override
+            public void onPurchaseHistoryResponse(BillingResult result, List<PurchaseHistoryRecord> historyList) {
+                boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
+                listener.onPurchaseHistoryResult(ok, purchaseHistoryToJson(historyList),
+                        result.getDebugMessage());
+            }
         });
     }
 
@@ -331,10 +352,13 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                         InAppMessageParams.InAppMessageCategoryId.TRANSACTIONAL)
                 .build();
 
-        billingClient.showInAppMessages(activity, params, result -> {
-            String token = result.getPurchaseToken();
-            listener.onInAppMessageResult(result.getResponseCode(),
-                    token != null ? token : "");
+        billingClient.showInAppMessages(activity, params, new BillingClient.InAppMessageResponseCallback() {
+            @Override
+            public void onInAppMessageResponse(InAppMessageResult result) {
+                String token = result.getPurchaseToken();
+                listener.onInAppMessageResult(result.getResponseCode(),
+                        token != null ? token : "");
+            }
         });
     }
 
