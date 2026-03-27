@@ -12,6 +12,7 @@ import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.ConsumeParams;
 import com.android.billingclient.api.ConsumeResponseListener;
 import com.android.billingclient.api.InAppMessageParams;
+import com.android.billingclient.api.InAppMessageResponseCallback;
 import com.android.billingclient.api.InAppMessageResult;
 import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
@@ -352,7 +353,7 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                         InAppMessageParams.InAppMessageCategoryId.TRANSACTIONAL)
                 .build();
 
-        billingClient.showInAppMessages(activity, params, new BillingClient.InAppMessageResponseCallback() {
+        billingClient.showInAppMessages(activity, params, new InAppMessageResponseCallback() {
             @Override
             public void onInAppMessageResponse(InAppMessageResult result) {
                 String token = result.getPurchaseToken();
