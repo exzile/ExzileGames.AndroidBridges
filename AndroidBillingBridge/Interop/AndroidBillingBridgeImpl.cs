@@ -15,7 +15,7 @@ namespace AndroidBillingBridge.Interop
         private Action<PurchaseResult>? _purchaseListener;
 
         public bool IsAvailable => true;
-        public bool IsReady => _bridge.IsReady();
+        public bool IsReady => _bridge.IsReady;
 
         public AndroidBillingBridgeImpl(Activity activity)
         {
@@ -38,7 +38,7 @@ namespace AndroidBillingBridge.Interop
         }
 
         public void Disconnect() => _bridge.EndConnection();
-        public int GetConnectionState() => _bridge.GetConnectionState();
+        public int GetConnectionState() => _bridge.ConnectionState;
 
         // ── Product Details ──
 
@@ -122,13 +122,23 @@ namespace AndroidBillingBridge.Interop
             return tcs.Task;
         }
 
-        // ── Purchase History (removed in Billing Library v8) ──
+        // ── Purchase History ──
 
         public Task<PurchaseHistoryResult> QueryInAppPurchaseHistoryAsync()
-            => Task.FromResult(new PurchaseHistoryResult(false, null, "queryPurchaseHistory was removed in Billing Library v8"));
+            => QueryPurchaseHistoryInternal("inapp");
 
         public Task<PurchaseHistoryResult> QuerySubscriptionPurchaseHistoryAsync()
-            => Task.FromResult(new PurchaseHistoryResult(false, null, "queryPurchaseHistory was removed in Billing Library v8"));
+            => QueryPurchaseHistoryInternal("subs");
+
+        private Task<PurchaseHistoryResult> QueryPurchaseHistoryInternal(string productType)
+        {
+            var tcs = new TaskCompletionSource<PurchaseHistoryResult>();
+            _activity.RunOnUiThread(() =>
+            {
+                _bridge.QueryPurchaseHistory(productType, new PurchaseHistoryListenerImpl(tcs));
+            });
+            return tcs.Task;
+        }
 
         // ── In-App Messages ──
 
@@ -163,6 +173,13 @@ namespace AndroidBillingBridge.Interop
         {
             if (string.IsNullOrEmpty(json) || json == "[]") return null;
             try { return JsonSerializer.Deserialize<PurchaseEntry[]>(json); }
+            catch { return null; }
+        }
+
+        private static PurchaseHistoryEntry[]? DeserializeHistory(string? json)
+        {
+            if (string.IsNullOrEmpty(json) || json == "[]") return null;
+            try { return JsonSerializer.Deserialize<PurchaseHistoryEntry[]>(json); }
             catch { return null; }
         }
 
@@ -223,6 +240,15 @@ namespace AndroidBillingBridge.Interop
             public QueryPurchasesListenerImpl(TaskCompletionSource<QueryPurchasesResult> tcs) => _tcs = tcs;
             public void OnQueryPurchasesResult(bool success, string? json, string? message)
                 => _tcs.TrySetResult(new QueryPurchasesResult(success, DeserializePurchases(json), message));
+        }
+
+        private sealed class PurchaseHistoryListenerImpl : Java.Lang.Object,
+            global::Com.Exzilegames.Billingbridge.BillingBridge.IPurchaseHistoryListener
+        {
+            private readonly TaskCompletionSource<PurchaseHistoryResult> _tcs;
+            public PurchaseHistoryListenerImpl(TaskCompletionSource<PurchaseHistoryResult> tcs) => _tcs = tcs;
+            public void OnPurchaseHistoryResult(bool success, string? json, string? message)
+                => _tcs.TrySetResult(new PurchaseHistoryResult(success, DeserializeHistory(json), message));
         }
 
         private sealed class InAppMessageListenerImpl : Java.Lang.Object,
