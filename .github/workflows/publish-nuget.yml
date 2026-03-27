@@ -1,0 +1,68 @@
+name: Publish NuGet Packages
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version override (e.g. 1.2.3). Leave blank to use version from csproj."
+        required: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            9.0.x
+            10.0.x
+
+      - name: Install Android workload
+        run: dotnet workload install android
+
+      - name: Determine version
+        id: version
+        run: |
+          if [[ -n "${{ github.event.inputs.version }}" ]]; then
+            echo "version=${{ github.event.inputs.version }}" >> "$GITHUB_OUTPUT"
+          elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
+            echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "version=" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Pack AndroidBillingBridge
+        run: |
+          VERSION_ARG=""
+          if [[ -n "${{ steps.version.outputs.version }}" ]]; then
+            VERSION_ARG="-p:Version=${{ steps.version.outputs.version }}"
+          fi
+          dotnet pack AndroidBillingBridge/AndroidBillingBridge.csproj \
+            -c Release \
+            $VERSION_ARG \
+            -o ./artifacts
+
+      - name: Pack AndroidPlayGamesBridge
+        run: |
+          VERSION_ARG=""
+          if [[ -n "${{ steps.version.outputs.version }}" ]]; then
+            VERSION_ARG="-p:Version=${{ steps.version.outputs.version }}"
+          fi
+          dotnet pack AndroidPlayGamesBridge/AndroidPlayGamesBridge.csproj \
+            -c Release \
+            $VERSION_ARG \
+            -o ./artifacts
+
+      - name: Push to NuGet.org
+        run: |
+          dotnet nuget push ./artifacts/*.nupkg \
+            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --source https://api.nuget.org/v3/index.json \
+            --skip-duplicate
