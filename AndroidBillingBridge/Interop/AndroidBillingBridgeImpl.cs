@@ -140,14 +140,13 @@ namespace AndroidBillingBridge.Interop
             return tcs.Task;
         }
 
-        // ── In-App Messages ──
+        // ── In-App Messages (callback not available in Xamarin binding) ──
 
         public void ShowInAppMessages(Action<InAppMessageResult>? listener)
         {
-            _activity.RunOnUiThread(() =>
-            {
-                _bridge.ShowInAppMessages(new InAppMessageListenerImpl(listener));
-            });
+            // InAppMessageResponseCallback is not exposed by the Xamarin binding JAR,
+            // so we cannot call showInAppMessages from Java. Notify caller as unsupported.
+            listener?.Invoke(new InAppMessageResult(-1, ""));
         }
 
         // ── JSON deserialization helpers ──
@@ -251,14 +250,6 @@ namespace AndroidBillingBridge.Interop
                 => _tcs.TrySetResult(new PurchaseHistoryResult(success, DeserializeHistory(json), message));
         }
 
-        private sealed class InAppMessageListenerImpl : Java.Lang.Object,
-            global::Com.Exzilegames.Billingbridge.BillingBridge.IInAppMessageListener
-        {
-            private readonly Action<InAppMessageResult>? _listener;
-            public InAppMessageListenerImpl(Action<InAppMessageResult>? listener) => _listener = listener;
-            public void OnInAppMessageResult(int responseCode, string? purchaseToken)
-                => _listener?.Invoke(new InAppMessageResult(responseCode, purchaseToken));
-        }
     }
 }
 #endif

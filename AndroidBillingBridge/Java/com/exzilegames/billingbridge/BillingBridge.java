@@ -11,9 +11,6 @@ import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.ConsumeParams;
 import com.android.billingclient.api.ConsumeResponseListener;
-import com.android.billingclient.api.InAppMessageParams;
-import com.android.billingclient.api.InAppMessageResponseCallback;
-import com.android.billingclient.api.InAppMessageResult;
 import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.ProductDetailsResponseListener;
@@ -78,9 +75,6 @@ public final class BillingBridge implements PurchasesUpdatedListener {
         void onPurchaseHistoryResult(boolean success, String historyJson, String message);
     }
 
-    public interface InAppMessageListener {
-        void onInAppMessageResult(int responseCode, String purchaseToken);
-    }
 
     // ── Initialization ──
 
@@ -339,26 +333,6 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                 boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
                 listener.onPurchaseHistoryResult(ok, purchaseHistoryToJson(historyList),
                         result.getDebugMessage());
-            }
-        });
-    }
-
-    // ── In-App Messages (price changes, subscription status) ──
-
-    public void showInAppMessages(InAppMessageListener listener) {
-        if (billingClient == null || activity == null) return;
-
-        InAppMessageParams params = InAppMessageParams.newBuilder()
-                .addInAppMessageCategoryToShow(
-                        InAppMessageParams.InAppMessageCategoryId.TRANSACTIONAL)
-                .build();
-
-        billingClient.showInAppMessages(activity, params, new InAppMessageResponseCallback() {
-            @Override
-            public void onInAppMessageResponse(InAppMessageResult result) {
-                String token = result.getPurchaseToken();
-                listener.onInAppMessageResult(result.getResponseCode(),
-                        token != null ? token : "");
             }
         });
     }
