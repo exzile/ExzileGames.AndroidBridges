@@ -21,6 +21,9 @@ import com.google.android.gms.games.EventsClient;
 import com.google.android.gms.games.event.EventBuffer;
 import com.google.android.gms.games.PlayerStatsClient;
 import com.google.android.gms.games.stats.PlayerStats;
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.android.gms.tasks.Task;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -34,6 +37,7 @@ import java.nio.charset.StandardCharsets;
  *
  * GitHub: https://github.com/exzile/ExzileGames.AndroidBridges
  */
+@SuppressWarnings("unchecked")
 public final class PlayGamesBridge {
 
     private static final String TAG = "PlayGamesBridge";
@@ -88,17 +92,23 @@ public final class PlayGamesBridge {
         try {
             GamesSignInClient client = PlayGames.getGamesSignInClient(activity);
             if (silent) {
-                client.isAuthenticated().addOnCompleteListener(task -> {
-                    boolean authenticated = task.isSuccessful()
-                            && task.getResult().isAuthenticated();
-                    listener.onSignInResult(authenticated,
-                            authenticated ? "Authenticated" : "Not authenticated");
+                client.isAuthenticated().addOnCompleteListener(new OnCompleteListener() {
+                    @Override
+                    public void onComplete(Task task) {
+                        boolean authenticated = task.isSuccessful()
+                                && ((com.google.android.gms.games.AuthenticationResult) task.getResult()).isAuthenticated();
+                        listener.onSignInResult(authenticated,
+                                authenticated ? "Authenticated" : "Not authenticated");
+                    }
                 });
             } else {
-                client.signIn().addOnCompleteListener(task -> {
-                    boolean success = task.isSuccessful();
-                    listener.onSignInResult(success,
-                            success ? "Signed in" : "Sign-in failed");
+                client.signIn().addOnCompleteListener(new OnCompleteListener() {
+                    @Override
+                    public void onComplete(Task task) {
+                        boolean success = task.isSuccessful();
+                        listener.onSignInResult(success,
+                                success ? "Signed in" : "Sign-in failed");
+                    }
                 });
             }
         } catch (Exception e) {
@@ -123,19 +133,22 @@ public final class PlayGamesBridge {
     public void getCurrentPlayer(Activity activity, PlayerInfoListener listener) {
         try {
             PlayersClient client = PlayGames.getPlayersClient(activity);
-            client.getCurrentPlayer().addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    Player p = task.getResult();
-                    String hiRes = p.getHiResImageUri() != null
-                            ? p.getHiResImageUri().toString() : "";
-                    String icon = p.getIconImageUri() != null
-                            ? p.getIconImageUri().toString() : "";
-                    listener.onPlayerInfo(true, p.getPlayerId(),
-                            p.getDisplayName(), hiRes, icon, "OK");
-                } else {
-                    String msg = task.getException() != null
-                            ? task.getException().getMessage() : "Unknown error";
-                    listener.onPlayerInfo(false, "", "", "", "", msg);
+            client.getCurrentPlayer().addOnCompleteListener(new OnCompleteListener() {
+                @Override
+                public void onComplete(Task task) {
+                    if (task.isSuccessful()) {
+                        Player p = (Player) task.getResult();
+                        String hiRes = p.getHiResImageUri() != null
+                                ? p.getHiResImageUri().toString() : "";
+                        String icon = p.getIconImageUri() != null
+                                ? p.getIconImageUri().toString() : "";
+                        listener.onPlayerInfo(true, p.getPlayerId(),
+                                p.getDisplayName(), hiRes, icon, "OK");
+                    } else {
+                        String msg = task.getException() != null
+                                ? task.getException().getMessage() : "Unknown error";
+                        listener.onPlayerInfo(false, "", "", "", "", msg);
+                    }
                 }
             });
         } catch (Exception e) {
@@ -152,32 +165,35 @@ public final class PlayGamesBridge {
             SnapshotsClient client = PlayGames.getSnapshotsClient(activity);
             client.open(snapshotName, true,
                     SnapshotsClient.RESOLUTION_POLICY_MOST_RECENTLY_MODIFIED)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            SnapshotsClient.DataOrConflict<Snapshot> result =
-                                    task.getResult();
-                            Snapshot snapshot = result.getData();
-                            if (snapshot != null) {
-                                try {
-                                    byte[] bytes = snapshot.getSnapshotContents()
-                                            .readFully();
-                                    String data = new String(bytes,
-                                            StandardCharsets.UTF_8);
-                                    listener.onSnapshotLoaded(true, data, "OK");
-                                } catch (IOException e) {
+                    .addOnCompleteListener(new OnCompleteListener() {
+                        @Override
+                        public void onComplete(Task task) {
+                            if (task.isSuccessful()) {
+                                SnapshotsClient.DataOrConflict<Snapshot> result =
+                                        (SnapshotsClient.DataOrConflict<Snapshot>) task.getResult();
+                                Snapshot snapshot = result.getData();
+                                if (snapshot != null) {
+                                    try {
+                                        byte[] bytes = snapshot.getSnapshotContents()
+                                                .readFully();
+                                        String data = new String(bytes,
+                                                StandardCharsets.UTF_8);
+                                        listener.onSnapshotLoaded(true, data, "OK");
+                                    } catch (IOException e) {
+                                        listener.onSnapshotLoaded(false, "",
+                                                "Read error: " + e.getMessage());
+                                    }
+                                } else {
+                                    // Conflict — resolve with most recent
                                     listener.onSnapshotLoaded(false, "",
-                                            "Read error: " + e.getMessage());
+                                            "Snapshot conflict, resolved automatically");
                                 }
                             } else {
-                                // Conflict — resolve with most recent
-                                listener.onSnapshotLoaded(false, "",
-                                        "Snapshot conflict, resolved automatically");
+                                String msg = task.getException() != null
+                                        ? task.getException().getMessage()
+                                        : "Failed to open snapshot";
+                                listener.onSnapshotLoaded(false, "", msg);
                             }
-                        } else {
-                            String msg = task.getException() != null
-                                    ? task.getException().getMessage()
-                                    : "Failed to open snapshot";
-                            listener.onSnapshotLoaded(false, "", msg);
                         }
                     });
         } catch (Exception e) {
@@ -190,39 +206,47 @@ public final class PlayGamesBridge {
                              String data, String description,
                              SnapshotSaveListener listener) {
         try {
-            SnapshotsClient client = PlayGames.getSnapshotsClient(activity);
+            final SnapshotsClient client = PlayGames.getSnapshotsClient(activity);
             client.open(snapshotName, true,
                     SnapshotsClient.RESOLUTION_POLICY_MOST_RECENTLY_MODIFIED)
-                    .addOnCompleteListener(openTask -> {
-                        if (openTask.isSuccessful()) {
-                            Snapshot snapshot = openTask.getResult().getData();
-                            if (snapshot != null) {
-                                snapshot.getSnapshotContents().writeBytes(
-                                        data.getBytes(StandardCharsets.UTF_8));
-                                SnapshotMetadataChange change =
-                                        new SnapshotMetadataChange.Builder()
-                                                .setDescription(description)
-                                                .build();
-                                client.commitAndClose(snapshot, change)
-                                        .addOnCompleteListener(commitTask -> {
-                                            if (commitTask.isSuccessful()) {
-                                                listener.onSnapshotSaved(true, "OK");
-                                            } else {
-                                                String msg = commitTask.getException() != null
-                                                        ? commitTask.getException().getMessage()
-                                                        : "Commit failed";
-                                                listener.onSnapshotSaved(false, msg);
-                                            }
-                                        });
+                    .addOnCompleteListener(new OnCompleteListener() {
+                        @Override
+                        public void onComplete(Task openTask) {
+                            if (openTask.isSuccessful()) {
+                                SnapshotsClient.DataOrConflict<Snapshot> openResult =
+                                        (SnapshotsClient.DataOrConflict<Snapshot>) openTask.getResult();
+                                Snapshot snapshot = openResult.getData();
+                                if (snapshot != null) {
+                                    snapshot.getSnapshotContents().writeBytes(
+                                            data.getBytes(StandardCharsets.UTF_8));
+                                    SnapshotMetadataChange change =
+                                            new SnapshotMetadataChange.Builder()
+                                                    .setDescription(description)
+                                                    .build();
+                                    client.commitAndClose(snapshot, change)
+                                            .addOnCompleteListener(new OnCompleteListener() {
+                                                @Override
+                                                public void onComplete(Task commitTask) {
+                                                    if (commitTask.isSuccessful()) {
+                                                        listener.onSnapshotSaved(true, "OK");
+                                                    } else {
+                                                        String msg = commitTask.getException() != null
+                                                                ? commitTask.getException().getMessage()
+                                                                : "Commit failed";
+                                                        listener.onSnapshotSaved(false, msg);
+                                                    }
+                                                }
+                                            });
+                                } else {
+                                    listener.onSnapshotSaved(false,
+                                            "Snapshot conflict during save");
+                                }
                             } else {
-                                listener.onSnapshotSaved(false,
-                                        "Snapshot conflict during save");
+                                String msg = openTask.getException() != null
+                                        ? openTask.getException().getMessage()
+                                        : "Failed to open snapshot for save";
+                                listener.onSnapshotSaved(false, msg);
                             }
-                        } else {
-                            String msg = openTask.getException() != null
-                                    ? openTask.getException().getMessage()
-                                    : "Failed to open snapshot for save";
-                            listener.onSnapshotSaved(false, msg);
                         }
                     });
         } catch (Exception e) {
@@ -234,28 +258,36 @@ public final class PlayGamesBridge {
     public void deleteSnapshot(Activity activity, String snapshotName,
                                SnapshotDeleteListener listener) {
         try {
-            SnapshotsClient client = PlayGames.getSnapshotsClient(activity);
+            final SnapshotsClient client = PlayGames.getSnapshotsClient(activity);
             client.open(snapshotName, false,
                     SnapshotsClient.RESOLUTION_POLICY_MOST_RECENTLY_MODIFIED)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            Snapshot snapshot = task.getResult().getData();
-                            if (snapshot != null) {
-                                String id = snapshot.getMetadata().getSnapshotId();
-                                client.delete(snapshot.getMetadata())
-                                        .addOnCompleteListener(delTask -> {
-                                            listener.onSnapshotDeleted(
-                                                    delTask.isSuccessful(),
-                                                    delTask.isSuccessful() ? "Deleted"
-                                                            : "Delete failed");
-                                        });
+                    .addOnCompleteListener(new OnCompleteListener() {
+                        @Override
+                        public void onComplete(Task task) {
+                            if (task.isSuccessful()) {
+                                SnapshotsClient.DataOrConflict<Snapshot> result =
+                                        (SnapshotsClient.DataOrConflict<Snapshot>) task.getResult();
+                                Snapshot snapshot = result.getData();
+                                if (snapshot != null) {
+                                    String id = snapshot.getMetadata().getSnapshotId();
+                                    client.delete(snapshot.getMetadata())
+                                            .addOnCompleteListener(new OnCompleteListener() {
+                                                @Override
+                                                public void onComplete(Task delTask) {
+                                                    listener.onSnapshotDeleted(
+                                                            delTask.isSuccessful(),
+                                                            delTask.isSuccessful() ? "Deleted"
+                                                                    : "Delete failed");
+                                                }
+                                            });
+                                } else {
+                                    listener.onSnapshotDeleted(false,
+                                            "Snapshot not found");
+                                }
                             } else {
                                 listener.onSnapshotDeleted(false,
-                                        "Snapshot not found");
+                                        "Failed to open snapshot for delete");
                             }
-                        } else {
-                            listener.onSnapshotDeleted(false,
-                                    "Failed to open snapshot for delete");
                         }
                     });
         } catch (Exception e) {
@@ -271,10 +303,13 @@ public final class PlayGamesBridge {
         try {
             LeaderboardsClient client = PlayGames.getLeaderboardsClient(activity);
             client.submitScoreImmediate(leaderboardId, score)
-                    .addOnCompleteListener(task -> {
-                        listener.onScoreSubmitted(task.isSuccessful(),
-                                task.isSuccessful() ? "OK"
-                                        : "Submit failed");
+                    .addOnCompleteListener(new OnCompleteListener() {
+                        @Override
+                        public void onComplete(Task task) {
+                            listener.onScoreSubmitted(task.isSuccessful(),
+                                    task.isSuccessful() ? "OK"
+                                            : "Submit failed");
+                        }
                     });
         } catch (Exception e) {
             Log.e(TAG, "submitScore error", e);
@@ -286,8 +321,11 @@ public final class PlayGamesBridge {
         try {
             LeaderboardsClient client = PlayGames.getLeaderboardsClient(activity);
             client.getLeaderboardIntent(leaderboardId)
-                    .addOnSuccessListener(intent -> {
-                        activity.startActivityForResult(intent, 9100);
+                    .addOnSuccessListener(new OnSuccessListener<Intent>() {
+                        @Override
+                        public void onSuccess(Intent intent) {
+                            activity.startActivityForResult(intent, 9100);
+                        }
                     });
         } catch (Exception e) {
             Log.e(TAG, "showLeaderboard error", e);
@@ -298,8 +336,11 @@ public final class PlayGamesBridge {
         try {
             LeaderboardsClient client = PlayGames.getLeaderboardsClient(activity);
             client.getAllLeaderboardsIntent()
-                    .addOnSuccessListener(intent -> {
-                        activity.startActivityForResult(intent, 9100);
+                    .addOnSuccessListener(new OnSuccessListener<Intent>() {
+                        @Override
+                        public void onSuccess(Intent intent) {
+                            activity.startActivityForResult(intent, 9100);
+                        }
                     });
         } catch (Exception e) {
             Log.e(TAG, "showAllLeaderboards error", e);
@@ -313,9 +354,12 @@ public final class PlayGamesBridge {
         try {
             AchievementsClient client = PlayGames.getAchievementsClient(activity);
             client.unlockImmediate(achievementId)
-                    .addOnCompleteListener(task -> {
-                        listener.onAchievementResult(task.isSuccessful(),
-                                task.isSuccessful() ? "Unlocked" : "Unlock failed");
+                    .addOnCompleteListener(new OnCompleteListener() {
+                        @Override
+                        public void onComplete(Task task) {
+                            listener.onAchievementResult(task.isSuccessful(),
+                                    task.isSuccessful() ? "Unlocked" : "Unlock failed");
+                        }
                     });
         } catch (Exception e) {
             Log.e(TAG, "unlockAchievement error", e);
@@ -328,10 +372,13 @@ public final class PlayGamesBridge {
         try {
             AchievementsClient client = PlayGames.getAchievementsClient(activity);
             client.incrementImmediate(achievementId, steps)
-                    .addOnCompleteListener(task -> {
-                        listener.onAchievementResult(task.isSuccessful(),
-                                task.isSuccessful() ? "Incremented"
-                                        : "Increment failed");
+                    .addOnCompleteListener(new OnCompleteListener() {
+                        @Override
+                        public void onComplete(Task task) {
+                            listener.onAchievementResult(task.isSuccessful(),
+                                    task.isSuccessful() ? "Incremented"
+                                            : "Increment failed");
+                        }
                     });
         } catch (Exception e) {
             Log.e(TAG, "incrementAchievement error", e);
@@ -344,9 +391,12 @@ public final class PlayGamesBridge {
         try {
             AchievementsClient client = PlayGames.getAchievementsClient(activity);
             client.revealImmediate(achievementId)
-                    .addOnCompleteListener(task -> {
-                        listener.onAchievementResult(task.isSuccessful(),
-                                task.isSuccessful() ? "Revealed" : "Reveal failed");
+                    .addOnCompleteListener(new OnCompleteListener() {
+                        @Override
+                        public void onComplete(Task task) {
+                            listener.onAchievementResult(task.isSuccessful(),
+                                    task.isSuccessful() ? "Revealed" : "Reveal failed");
+                        }
                     });
         } catch (Exception e) {
             Log.e(TAG, "revealAchievement error", e);
@@ -358,8 +408,11 @@ public final class PlayGamesBridge {
         try {
             AchievementsClient client = PlayGames.getAchievementsClient(activity);
             client.getAchievementsIntent()
-                    .addOnSuccessListener(intent -> {
-                        activity.startActivityForResult(intent, 9101);
+                    .addOnSuccessListener(new OnSuccessListener<Intent>() {
+                        @Override
+                        public void onSuccess(Intent intent) {
+                            activity.startActivityForResult(intent, 9101);
+                        }
                     });
         } catch (Exception e) {
             Log.e(TAG, "showAchievements error", e);
@@ -380,25 +433,28 @@ public final class PlayGamesBridge {
     public void loadEvents(Activity activity, EventsListener listener) {
         try {
             EventsClient client = PlayGames.getEventsClient(activity);
-            client.load(true).addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    EventBuffer buffer = task.getResult().get();
-                    StringBuilder sb = new StringBuilder("[");
-                    if (buffer != null) {
-                        for (int i = 0; i < buffer.getCount(); i++) {
-                            if (i > 0) sb.append(",");
-                            com.google.android.gms.games.event.Event ev = buffer.get(i);
-                            sb.append("{\"id\":\"").append(ev.getEventId())
-                              .append("\",\"name\":\"").append(escapeJson(ev.getName()))
-                              .append("\",\"value\":").append(ev.getValue())
-                              .append("}");
+            client.load(true).addOnCompleteListener(new OnCompleteListener() {
+                @Override
+                public void onComplete(Task task) {
+                    if (task.isSuccessful()) {
+                        EventBuffer buffer = ((com.google.android.gms.games.AnnotatedData<EventBuffer>) task.getResult()).get();
+                        StringBuilder sb = new StringBuilder("[");
+                        if (buffer != null) {
+                            for (int i = 0; i < buffer.getCount(); i++) {
+                                if (i > 0) sb.append(",");
+                                com.google.android.gms.games.event.Event ev = buffer.get(i);
+                                sb.append("{\"id\":\"").append(ev.getEventId())
+                                  .append("\",\"name\":\"").append(escapeJson(ev.getName()))
+                                  .append("\",\"value\":").append(ev.getValue())
+                                  .append("}");
+                            }
+                            buffer.release();
                         }
-                        buffer.release();
+                        sb.append("]");
+                        listener.onEventsLoaded(true, sb.toString(), "OK");
+                    } else {
+                        listener.onEventsLoaded(false, "[]", "Failed to load events");
                     }
-                    sb.append("]");
-                    listener.onEventsLoaded(true, sb.toString(), "OK");
-                } else {
-                    listener.onEventsLoaded(false, "[]", "Failed to load events");
                 }
             });
         } catch (Exception e) {
@@ -412,28 +468,31 @@ public final class PlayGamesBridge {
     public void getPlayerStats(Activity activity, PlayerStatsListener listener) {
         try {
             PlayerStatsClient client = PlayGames.getPlayerStatsClient(activity);
-            client.loadPlayerStats(true).addOnCompleteListener(task -> {
-                if (task.isSuccessful()) {
-                    PlayerStats stats = task.getResult().get();
-                    if (stats != null) {
-                        listener.onPlayerStats(true,
-                                stats.getAverageSessionLength(),
-                                stats.getChurnProbability(),
-                                stats.getDaysSinceLastPlayed(),
-                                stats.getNumberOfPurchases(),
-                                stats.getNumberOfSessions(),
-                                stats.getSessionPercentile(),
-                                stats.getSpendPercentile(),
-                                stats.getSpendProbability(),
-                                stats.getTotalSpendNext28Days(),
-                                "OK");
+            client.loadPlayerStats(true).addOnCompleteListener(new OnCompleteListener() {
+                @Override
+                public void onComplete(Task task) {
+                    if (task.isSuccessful()) {
+                        PlayerStats stats = ((com.google.android.gms.games.AnnotatedData<PlayerStats>) task.getResult()).get();
+                        if (stats != null) {
+                            listener.onPlayerStats(true,
+                                    stats.getAverageSessionLength(),
+                                    stats.getChurnProbability(),
+                                    stats.getDaysSinceLastPlayed(),
+                                    stats.getNumberOfPurchases(),
+                                    stats.getNumberOfSessions(),
+                                    stats.getSessionPercentile(),
+                                    stats.getSpendPercentile(),
+                                    stats.getSpendProbability(),
+                                    stats.getTotalSpendNext28Days(),
+                                    "OK");
+                        } else {
+                            listener.onPlayerStats(false, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+                                    "No stats available");
+                        }
                     } else {
                         listener.onPlayerStats(false, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                                "No stats available");
+                                "Failed to load stats");
                     }
-                } else {
-                    listener.onPlayerStats(false, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-                            "Failed to load stats");
                 }
             });
         } catch (Exception e) {
