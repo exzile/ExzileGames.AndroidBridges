@@ -17,13 +17,10 @@ import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
 import com.android.billingclient.api.ProductDetailsResponseListener;
 import com.android.billingclient.api.Purchase;
-import com.android.billingclient.api.PurchaseHistoryRecord;
-import com.android.billingclient.api.PurchaseHistoryResponseListener;
 import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
 import com.android.billingclient.api.QueryProductDetailsResult;
-import com.android.billingclient.api.QueryPurchaseHistoryParams;
 import com.android.billingclient.api.QueryPurchasesParams;
 
 import org.json.JSONArray;
@@ -72,10 +69,6 @@ public final class BillingBridge implements PurchasesUpdatedListener {
 
     public interface QueryPurchasesListener {
         void onQueryPurchasesResult(boolean success, String purchasesJson, String message);
-    }
-
-    public interface PurchaseHistoryListener {
-        void onPurchaseHistoryResult(boolean success, String historyJson, String message);
     }
 
     public interface InAppMessageListener {
@@ -305,25 +298,6 @@ public final class BillingBridge implements PurchasesUpdatedListener {
         queryPurchases(BillingClient.ProductType.SUBS, listener);
     }
 
-    // ── Purchase History ──
-
-    public void queryPurchaseHistory(String productType, PurchaseHistoryListener listener) {
-        if (billingClient == null || !billingClient.isReady()) {
-            listener.onPurchaseHistoryResult(false, "[]", "BillingClient not ready");
-            return;
-        }
-
-        QueryPurchaseHistoryParams params = QueryPurchaseHistoryParams.newBuilder()
-                .setProductType(productType)
-                .build();
-
-        billingClient.queryPurchaseHistoryAsync(params, (result, historyList) -> {
-            boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
-            listener.onPurchaseHistoryResult(ok, purchaseHistoryToJson(historyList),
-                    result.getDebugMessage());
-        });
-    }
-
     // ── In-App Messages (price changes, subscription status) ──
 
     public void showInAppMessages(InAppMessageListener listener) {
@@ -433,30 +407,6 @@ public final class BillingBridge implements PurchasesUpdatedListener {
             }
         } catch (Exception e) {
             Log.e(TAG, "purchasesToJson error", e);
-        }
-        return arr.toString();
-    }
-
-    private static String purchaseHistoryToJson(List<PurchaseHistoryRecord> list) {
-        if (list == null) return "[]";
-        JSONArray arr = new JSONArray();
-        try {
-            for (PurchaseHistoryRecord r : list) {
-                JSONObject obj = new JSONObject();
-                obj.put("purchaseToken", r.getPurchaseToken());
-                obj.put("purchaseTime", r.getPurchaseTime());
-                obj.put("quantity", r.getQuantity());
-                obj.put("originalJson", r.getOriginalJson());
-
-                JSONArray products = new JSONArray();
-                for (String pid : r.getProducts()) {
-                    products.put(pid);
-                }
-                obj.put("products", products);
-                arr.put(obj);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "purchaseHistoryToJson error", e);
         }
         return arr.toString();
     }
