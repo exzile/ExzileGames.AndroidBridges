@@ -1,0 +1,7 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="AndroidPlayGamesBridge/AndroidPlayGamesBridge.csproj" />
+    <File Path="todo.txt" />
+    <Project Path="AndroidBillingBridge/AndroidBillingBridge.csproj" />
+  </Folder>
+</Solution>

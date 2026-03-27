@@ -1,0 +1,40 @@
+
+  1. Create one GitHub repo
+
+  Go to https://github.com/new:
+  - Name: ExzileGames.Bridges
+  - Public, no template, no README
+
+  2. Push it
+
+  cd C:\Users\joeyp\source\repos\ExzileGames.Bridges
+  git init
+  git add -A
+  git commit -m "Initial release: AndroidPlayGamesBridge + AndroidBillingBridge"
+  git remote add origin https://github.com/exzile/ExzileGames.AndroidBridges.git
+  git branch -M main
+  git push -u origin main
+
+  3. Get NuGet API key
+
+  Go to https://www.nuget.org/account/apikeys, create key scoped to ExzileGames.*
+
+  4. Pack & publish (on a machine with Android workload)
+
+  cd C:\Users\joeyp\source\repos\ExzileGames.Bridges
+
+  # Pack both
+  dotnet pack AndroidPlayGamesBridge/AndroidPlayGamesBridge.csproj -c Release -o ./nupkg
+  dotnet pack AndroidBillingBridge/AndroidBillingBridge.csproj -c Release -o ./nupkg
+
+  # Publish both (replace YOUR_KEY)
+  dotnet nuget push nupkg/ExzileGames.AndroidPlayGamesBridge.1.0.0.nupkg -k YOUR_KEY -s https://api.nuget.org/v3/index.json
+  dotnet nuget push nupkg/ExzileGames.AndroidBillingBridge.1.0.0.nupkg -k YOUR_KEY -s https://api.nuget.org/v3/index.json
+
+  5. Adding future bridges
+
+  Just create a new folder, follow the pattern, add to the .slnx, and dotnet pack it separately. Each project produces its own NuGet. One repo, many packages.
+
+  6. Version bumps
+
+  Edit the <Version> in the specific project's .csproj, pack, push. You can version each package independently.

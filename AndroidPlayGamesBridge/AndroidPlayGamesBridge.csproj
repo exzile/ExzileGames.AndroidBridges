@@ -1,0 +1,31 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net9.0;net9.0-android35.0;net10.0;net10.0-android36.0</TargetFrameworks>
+    <RootNamespace>AndroidPlayGamesBridge</RootNamespace>
+    <PackageId>ExzileGames.AndroidPlayGamesBridge</PackageId>
+    <Version>1.0.0</Version>
+    <Description>Java bridge for Google Play Games Services v2 APIs missing from the Xamarin.GooglePlayServices.Games.V2 NuGet bindings. Exposes SnapshotsClient (cloud saves), PlayersClient (player info), and RecallClient via compiled Java source and C# JNI interop.</Description>
+    <PackageTags>android;google-play-games;play-games-services;snapshots;cloud-save;monogame;maui;xamarin;dotnet-android</PackageTags>
+    <PackageProjectUrl>https://github.com/exzile/ExzileGames.AndroidBridges/tree/main/AndroidPlayGamesBridge</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="$(TargetFramework.Contains('android'))">
+    <UseAndroid>true</UseAndroid>
+    <AndroidMinSdkVersion>23</AndroidMinSdkVersion>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('android'))">
+    <PackageReference Include="Xamarin.GooglePlayServices.Games.V2" Version="121.0.0.3" />
+    <AndroidJavaSource Include="Java\**\*.java" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!$(TargetFramework.Contains('android'))">
+    <Compile Remove="Interop\AndroidPlayGamesBridgeImpl.cs" />
+  </ItemGroup>
+</Project>
