@@ -22,9 +22,6 @@ import com.google.android.gms.games.event.EventBuffer;
 import com.google.android.gms.games.PlayerStatsClient;
 import com.google.android.gms.games.stats.PlayerStats;
 
-import com.google.android.gms.games.RecallClient;
-import com.google.android.gms.games.recall.RecallAccess;
-
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -74,10 +71,6 @@ public final class PlayGamesBridge {
 
     public interface EventsListener {
         void onEventsLoaded(boolean success, String eventsJson, String message);
-    }
-
-    public interface RecallAccessListener {
-        void onRecallAccess(boolean success, String sessionId, String message);
     }
 
     public interface PlayerStatsListener {
@@ -447,32 +440,6 @@ public final class PlayGamesBridge {
             Log.e(TAG, "getPlayerStats error", e);
             listener.onPlayerStats(false, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     e.getMessage());
-        }
-    }
-
-    // ── Recall (cross-device identity linking) ──
-
-    public void requestRecallAccess(Activity activity, String sessionId,
-                                    RecallAccessListener listener) {
-        try {
-            RecallClient client = PlayGames.getRecallClient(activity);
-            client.requestRecallAccess(sessionId)
-                    .addOnCompleteListener(task -> {
-                        if (task.isSuccessful()) {
-                            RecallAccess access = task.getResult();
-                            listener.onRecallAccess(true,
-                                    access != null ? access.getSessionId() : sessionId,
-                                    "OK");
-                        } else {
-                            String msg = task.getException() != null
-                                    ? task.getException().getMessage()
-                                    : "Recall access failed";
-                            listener.onRecallAccess(false, "", msg);
-                        }
-                    });
-        } catch (Exception e) {
-            Log.e(TAG, "requestRecallAccess error", e);
-            listener.onRecallAccess(false, "", e.getMessage());
         }
     }
 

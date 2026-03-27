@@ -152,17 +152,10 @@ namespace AndroidPlayGamesBridge.Interop
             return tcs.Task;
         }
 
-        // ── Recall ──
+        // ── Recall (not available in Xamarin binding) ──
 
         public Task<RecallAccessResult> RequestRecallAccessAsync(string sessionId)
-        {
-            var tcs = new TaskCompletionSource<RecallAccessResult>();
-            _activity.RunOnUiThread(() =>
-            {
-                _bridge.RequestRecallAccess(_activity, sessionId, new RecallAccessListenerImpl(tcs));
-            });
-            return tcs.Task;
-        }
+            => Task.FromResult(new RecallAccessResult(false, null, "RecallClient API is not available in the Xamarin binding"));
 
         // ── Player Stats ──
 
@@ -240,15 +233,6 @@ namespace AndroidPlayGamesBridge.Interop
             public AchievementListenerImpl(TaskCompletionSource<OperationResult> tcs) => _tcs = tcs;
             public void OnAchievementResult(bool success, string? message)
                 => _tcs.TrySetResult(new OperationResult(success, message));
-        }
-
-        private sealed class RecallAccessListenerImpl : Java.Lang.Object,
-            global::Com.Exzilegames.Playgamesbridge.PlayGamesBridge.IRecallAccessListener
-        {
-            private readonly TaskCompletionSource<RecallAccessResult> _tcs;
-            public RecallAccessListenerImpl(TaskCompletionSource<RecallAccessResult> tcs) => _tcs = tcs;
-            public void OnRecallAccess(bool success, string? sessionId, string? message)
-                => _tcs.TrySetResult(new RecallAccessResult(success, sessionId, message));
         }
 
         private sealed class EventsListenerImpl : Java.Lang.Object,
