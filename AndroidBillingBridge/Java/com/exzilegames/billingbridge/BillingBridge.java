@@ -11,16 +11,13 @@ import com.android.billingclient.api.BillingFlowParams;
 import com.android.billingclient.api.BillingResult;
 import com.android.billingclient.api.ConsumeParams;
 import com.android.billingclient.api.ConsumeResponseListener;
-import com.android.billingclient.api.InAppMessageParams;
-import com.android.billingclient.api.InAppMessageResult;
 import com.android.billingclient.api.PendingPurchasesParams;
 import com.android.billingclient.api.ProductDetails;
-import com.android.billingclient.api.ProductDetailsResponseListener;
 import com.android.billingclient.api.Purchase;
-import com.android.billingclient.api.PurchaseHistoryRecord;
 import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.InAppMessageParams;
 import com.android.billingclient.api.QueryPurchasesParams;
 
 import org.json.JSONArray;
@@ -159,9 +156,8 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                 .setProductList(products)
                 .build();
 
-        billingClient.queryProductDetailsAsync(params, (result, queryResult) -> {
+        billingClient.queryProductDetailsAsync(params, (result, detailsList) -> {
             boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
-            List<ProductDetails> detailsList = queryResult != null ? queryResult.getProductDetailsList() : null;
             String json = productDetailsToJson(detailsList);
             listener.onProductDetailsResult(ok, json, result.getDebugMessage());
         });
@@ -197,8 +193,7 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                     .setProductList(products)
                     .build();
 
-            billingClient.queryProductDetailsAsync(qParams, (result, queryResult) -> {
-                List<ProductDetails> detailsList = queryResult != null ? queryResult.getProductDetailsList() : null;
+            billingClient.queryProductDetailsAsync(qParams, (result, detailsList) -> {
                 if (result.getResponseCode() != BillingClient.BillingResponseCode.OK
                         || detailsList == null || detailsList.isEmpty()) {
                     if (purchaseListener != null) {
@@ -218,13 +213,16 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                     pdBuilder.setOfferToken(offerToken);
                 }
 
-                BillingFlowParams flowParams = BillingFlowParams.newBuilder()
+                final BillingFlowParams flowParams = BillingFlowParams.newBuilder()
                         .setProductDetailsParamsList(
                                 Collections.singletonList(pdBuilder.build()))
                         .build();
 
-                activity.runOnUiThread(() -> {
-                    billingClient.launchBillingFlow(activity, flowParams);
+                activity.runOnUiThread(new Runnable() {
+                    @Override
+                    public void run() {
+                        billingClient.launchBillingFlow(activity, flowParams);
+                    }
                 });
             });
             return 0;
@@ -251,9 +249,12 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                 .setPurchaseToken(purchaseToken)
                 .build();
 
-        billingClient.consumeAsync(params, (result, token) -> {
-            boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
-            listener.onConsumeResult(ok, token, result.getDebugMessage());
+        billingClient.consumeAsync(params, new ConsumeResponseListener() {
+            @Override
+            public void onConsumeResponse(BillingResult result, String token) {
+                boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
+                listener.onConsumeResult(ok, token, result.getDebugMessage());
+            }
         });
     }
 
@@ -269,9 +270,12 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                 .setPurchaseToken(purchaseToken)
                 .build();
 
-        billingClient.acknowledgePurchase(params, result -> {
-            boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
-            listener.onAcknowledgeResult(ok, result.getDebugMessage());
+        billingClient.acknowledgePurchase(params, new AcknowledgePurchaseResponseListener() {
+            @Override
+            public void onAcknowledgePurchaseResponse(BillingResult result) {
+                boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
+                listener.onAcknowledgeResult(ok, result.getDebugMessage());
+            }
         });
     }
 
@@ -287,10 +291,13 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                 .setProductType(productType)
                 .build();
 
-        billingClient.queryPurchasesAsync(params, (result, purchases) -> {
-            boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
-            listener.onQueryPurchasesResult(ok, purchasesToJson(purchases),
-                    result.getDebugMessage());
+        billingClient.queryPurchasesAsync(params, new PurchasesResponseListener() {
+            @Override
+            public void onQueryPurchasesResponse(BillingResult result, List<Purchase> purchases) {
+                boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
+                listener.onQueryPurchasesResult(ok, purchasesToJson(purchases),
+                        result.getDebugMessage());
+            }
         });
     }
 
@@ -460,27 +467,4 @@ public final class BillingBridge implements PurchasesUpdatedListener {
         return arr.toString();
     }
 
-    private static String purchaseHistoryToJson(List<PurchaseHistoryRecord> list) {
-        if (list == null) return "[]";
-        JSONArray arr = new JSONArray();
-        try {
-            for (PurchaseHistoryRecord r : list) {
-                JSONObject obj = new JSONObject();
-                obj.put("purchaseToken", r.getPurchaseToken());
-                obj.put("purchaseTime", r.getPurchaseTime());
-                obj.put("quantity", r.getQuantity());
-                obj.put("originalJson", r.getOriginalJson());
-
-                JSONArray products = new JSONArray();
-                for (String pid : r.getProducts()) {
-                    products.put(pid);
-                }
-                obj.put("products", products);
-                arr.put(obj);
-            }
-        } catch (Exception e) {
-            Log.e(TAG, "purchaseHistoryToJson error", e);
-        }
-        return arr.toString();
-    }
 }
