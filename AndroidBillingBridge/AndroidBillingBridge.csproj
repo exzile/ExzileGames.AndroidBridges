@@ -1,9 +1,8 @@
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net9.0;net9.0-android35.0;net10.0;net10.0-android36.0</TargetFrameworks>
+    <TargetFrameworks>net10.0;net10.0-android36.0</TargetFrameworks>
     <RootNamespace>AndroidBillingBridge</RootNamespace>
     <PackageId>ExzileGames.AndroidBillingBridge</PackageId>
-    <Version>1.0.0</Version>
     <Description>Java bridge for Google Play Billing Library on .NET Android. Provides clean async C# access to the full billing API without reflection hacks or JNI lifetime issues.</Description>
     <PackageTags>android;google-play-billing;in-app-purchase;iap;subscriptions;monogame;maui;xamarin;dotnet-android</PackageTags>
     <PackageProjectUrl>https://github.com/exzile/ExzileGames.AndroidBridges/tree/main/AndroidBillingBridge</PackageProjectUrl>

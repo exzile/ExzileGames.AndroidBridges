@@ -23,7 +23,6 @@ import com.google.android.gms.games.PlayerStatsClient;
 import com.google.android.gms.games.stats.PlayerStats;
 
 import com.google.android.gms.games.RecallClient;
-import com.google.android.gms.games.recall.RecallAccess;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -456,13 +455,10 @@ public final class PlayGamesBridge {
                                     RecallAccessListener listener) {
         try {
             RecallClient client = PlayGames.getRecallClient(activity);
-            client.requestRecallAccess(sessionId)
+            client.requestRecallAccess()
                     .addOnCompleteListener(task -> {
                         if (task.isSuccessful()) {
-                            RecallAccess access = task.getResult();
-                            listener.onRecallAccess(true,
-                                    access != null ? access.getSessionId() : sessionId,
-                                    "OK");
+                            listener.onRecallAccess(true, sessionId, "OK");
                         } else {
                             String msg = task.getException() != null
                                     ? task.getException().getMessage()

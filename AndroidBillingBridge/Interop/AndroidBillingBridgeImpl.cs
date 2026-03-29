@@ -15,7 +15,7 @@ namespace AndroidBillingBridge.Interop
         private Action<PurchaseResult>? _purchaseListener;
 
         public bool IsAvailable => true;
-        public bool IsReady => _bridge.IsReady();
+        public bool IsReady => _bridge.IsReady;
 
         public AndroidBillingBridgeImpl(Activity activity)
         {
@@ -38,7 +38,7 @@ namespace AndroidBillingBridge.Interop
         }
 
         public void Disconnect() => _bridge.EndConnection();
-        public int GetConnectionState() => _bridge.GetConnectionState();
+        public int GetConnectionState() => _bridge.ConnectionState;
 
         // ── Product Details ──
 
