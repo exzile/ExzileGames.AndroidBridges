@@ -25,6 +25,8 @@ import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.android.gms.tasks.Task;
 
+import com.google.android.gms.games.RecallClient;
+
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 
@@ -84,6 +86,10 @@ public final class PlayGamesBridge {
                            float sessionPercentile, float spendPercentile,
                            float spendProbability, float totalSpendNext28Days,
                            String message);
+    }
+
+    public interface RecallAccessListener {
+        void onRecallAccess(boolean success, String sessionId, String message);
     }
 
     // ── Sign-In ──
@@ -503,6 +509,29 @@ public final class PlayGamesBridge {
             Log.e(TAG, "getPlayerStats error", e);
             listener.onPlayerStats(false, 0, 0, 0, 0, 0, 0, 0, 0, 0,
                     e.getMessage());
+        }
+    }
+
+    // ── Recall (cross-device identity linking) ──
+
+    public void requestRecallAccess(Activity activity, String sessionId,
+                                    RecallAccessListener listener) {
+        try {
+            RecallClient client = PlayGames.getRecallClient(activity);
+            client.requestRecallAccess()
+                    .addOnCompleteListener(task -> {
+                        if (task.isSuccessful()) {
+                            listener.onRecallAccess(true, sessionId, "OK");
+                        } else {
+                            String msg = task.getException() != null
+                                    ? task.getException().getMessage()
+                                    : "Recall access failed";
+                            listener.onRecallAccess(false, "", msg);
+                        }
+                    });
+        } catch (Exception e) {
+            Log.e(TAG, "requestRecallAccess error", e);
+            listener.onRecallAccess(false, "", e.getMessage());
         }
     }
 
