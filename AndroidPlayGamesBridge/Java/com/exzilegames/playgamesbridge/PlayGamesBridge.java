@@ -138,6 +138,10 @@ public final class PlayGamesBridge {
                 public void onComplete(Task task) {
                     if (task.isSuccessful()) {
                         Player p = (Player) task.getResult();
+                        if (p == null) {
+                            listener.onPlayerInfo(false, "", "", "", "", "Player object is null");
+                            return;
+                        }
                         String hiRes = p.getHiResImageUri() != null
                                 ? p.getHiResImageUri().toString() : "";
                         String icon = p.getIconImageUri() != null
