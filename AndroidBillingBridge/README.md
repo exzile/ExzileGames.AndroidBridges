@@ -1,10 +1,10 @@
 # AndroidBillingBridge
 
-A Java bridge + C# interop library for Google Play Billing Library on .NET Android. Provides direct access to the full Billing API without reflection hacks or incomplete NuGet bindings.
+A Java bridge + C# interop library for Google Play Billing Library v8 on .NET Android. Provides direct access to the full Billing API without reflection hacks or incomplete NuGet bindings.
 
 ## Problem
 
-The `Xamarin.Android.Google.BillingClient` NuGet bindings have issues with certain API surfaces — missing method overloads, parameter order inconsistencies, and types that require reflection to invoke. This forces developers to write fragile reflection-based code to call basic operations like `ConsumeAsync` and `QueryProductDetailsAsync`.
+The `Xamarin.Android.Google.BillingClient` NuGet binding has issues with certain API surfaces — missing method overloads, parameter type inconsistencies, and types that require reflection to invoke. This forces developers to write fragile reflection-based code to call basic operations like `ConsumeAsync` and `QueryProductDetailsAsync`.
 
 ## Solution
 
@@ -17,19 +17,18 @@ This library compiles a Java bridge class directly into your Android project. Th
 | **Connection** | `ConnectAsync`, `Disconnect`, `GetConnectionState` |
 | **Product Details** | `QueryInAppProductsAsync`, `QuerySubscriptionsAsync` |
 | **Purchase Flow** | `LaunchPurchaseFlow`, `LaunchPurchaseFlowWithOffer`, `SetPurchaseListener` |
-| **Consume** | `ConsumeAsync` (no reflection hacks) |
+| **Consume** | `ConsumeAsync` |
 | **Acknowledge** | `AcknowledgeAsync` |
 | **Query Purchases** | `QueryInAppPurchasesAsync`, `QuerySubscriptionPurchasesAsync` |
 | **Purchase History** | `QueryInAppPurchaseHistoryAsync`, `QuerySubscriptionPurchaseHistoryAsync` |
 | **In-App Messages** | `ShowInAppMessages` (price changes, subscription status) |
-| **Subscriptions** | Full offer token + pricing phase support |
 
 ## Setup
 
-### 1. Add project reference
+### 1. Add NuGet package
 
-```xml
-<ProjectReference Include="..\AndroidBillingBridge\AndroidBillingBridge.csproj" />
+```bash
+dotnet add package ExzileGames.AndroidBillingBridge
 ```
 
 ### 2. Initialize in your Activity
@@ -51,10 +50,10 @@ protected override void OnCreate(Bundle? savedInstanceState)
 ```csharp
 using AndroidBillingBridge.Interop;
 
-// Connect
+// Connect to the billing service
 var conn = await BillingBridgeManager.ConnectAsync();
 
-// Query products (with real prices from Google Play)
+// Query products (returns real prices from Google Play)
 var products = await BillingBridgeManager.QueryInAppProductsAsync(
     ["redchest500", "redchest2000"]);
 
@@ -64,38 +63,31 @@ if (products.Success)
         Console.WriteLine($"{p.Name}: {p.OneTimePurchaseOfferDetails?.FormattedPrice}");
 }
 
-// Set purchase listener
+// Listen for purchase results
 BillingBridgeManager.SetPurchaseListener(result =>
 {
     if (result.ResponseCode == 0 && result.Purchases != null)
     {
         foreach (var purchase in result.Purchases)
-        {
-            // Consume or acknowledge
             _ = BillingBridgeManager.ConsumeAsync(purchase.PurchaseToken);
-        }
     }
 });
 
-// Launch purchase
+// Launch purchase flow
 BillingBridgeManager.LaunchPurchaseFlow("redchest500");
 
-// Query existing purchases (restore)
+// Restore purchases
 var existing = await BillingBridgeManager.QueryInAppPurchasesAsync();
 ```
 
-## What this replaces
-
-The existing `AndroidInAppPurchaseService` uses reflection to work around binding issues:
+## What This Replaces
 
 ```csharp
-// BEFORE: reflection hacks
+// BEFORE: reflection hacks required by the raw binding
 var method = billingClient.GetType().GetMethods()
     .Where(m => m.Name == "ConsumeAsync" || m.Name == "Consume")...
 method.Invoke(billingClient, args);
-```
 
-```csharp
 // AFTER: direct bridge call
 var result = await BillingBridgeManager.ConsumeAsync(purchaseToken);
 ```

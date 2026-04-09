@@ -1,21 +1,34 @@
 # AndroidRemoteConfigBridge
 
-A C# wrapper for Firebase Remote Config on .NET Android. Fixes the Xamarin binding's `FetchAndActivateAsync()` returning `Task<Java.Lang.Object>` (a boxed bool) and provides a clean typed API for feature flags and live-ops configuration.
+A C# wrapper for Firebase Remote Config on .NET Android. Fixes the Xamarin binding's `FetchAndActivateAsync()` returning `Task<Java.Lang.Object>` (a boxed bool) and provides a typed API for feature flags and live-ops configuration.
 
-## Requirements
+## Problem
 
-- A `google-services.json` file placed in your Android project root (set **Build Action** to `GoogleServicesJson`).
-- Firebase initialised in your app before calling any bridge methods.
+The `Xamarin.Firebase.Config` binding's `FetchAndActivateAsync` returns `Task<Java.Lang.Object>` instead of `Task<bool>`, requiring an unsafe cast to read the activation result. Additionally, `SetDefaultsAsync` only exposes the `int` (XML resource ID) overload — the `Map`-based overload is absent from the binding entirely and must be called via JNI.
+
+## Solution
+
+This bridge wraps both issues:
+- `FetchAndActivateAsync` is unwrapped into a typed `RemoteConfigFetchResult` record with `activated` and `success` fields.
+- `SetDefaults` calls `setDefaultsAsync(Map)` via `Android.Runtime.JNIEnv` since the binding doesn't expose it.
 
 ## Setup
 
-### 1. Add project reference
+### 1. Add NuGet package
 
-```xml
-<ProjectReference Include="..\AndroidRemoteConfigBridge\AndroidRemoteConfigBridge.csproj" />
+```bash
+dotnet add package ExzileGames.AndroidRemoteConfigBridge
 ```
 
-### 2. Register the implementation in your Activity
+### 2. Add google-services.json
+
+Place your `google-services.json` (from the Firebase Console) in the Android app project root and set its build action:
+
+```xml
+<GoogleServicesJson Include="google-services.json" />
+```
+
+### 3. Register the implementation in your Activity
 
 ```csharp
 using AndroidRemoteConfigBridge.Interop;
@@ -23,17 +36,16 @@ using AndroidRemoteConfigBridge.Interop;
 protected override void OnCreate(Bundle? savedInstanceState)
 {
     base.OnCreate(savedInstanceState);
-
     RemoteConfigBridgeManager.SetImplementation(new AndroidRemoteConfigBridgeImpl());
 }
 ```
 
-### 3. Use from shared code
+### 4. Use from shared code
 
 ```csharp
 using AndroidRemoteConfigBridge.Interop;
 
-// Optional: set in-app defaults used before a fetch completes
+// Set in-app defaults used before the first fetch completes
 RemoteConfigBridgeManager.SetDefaults(new Dictionary<string, object>
 {
     ["enable_new_feature"] = false,
@@ -53,7 +65,7 @@ if (result.Success)
     string message      = RemoteConfigBridgeManager.GetString("welcome_message");
 }
 
-// Force an immediate fetch during development (bypasses the 12-hour cache)
+// Bypass the 12-hour cache during development
 var devResult = await RemoteConfigBridgeManager.FetchAndActivateAsync(TimeSpan.Zero);
 ```
 
@@ -61,8 +73,8 @@ var devResult = await RemoteConfigBridgeManager.FetchAndActivateAsync(TimeSpan.Z
 
 | Method | Description |
 |--------|-------------|
-| `FetchAndActivateAsync(TimeSpan?)` | Fetches latest config and activates it. Pass `TimeSpan.Zero` to bypass the cache. |
-| `SetDefaults(IDictionary<string, object>)` | Sets in-app defaults used before the first fetch. |
+| `FetchAndActivateAsync(TimeSpan?)` | Fetches latest config and activates it. Returns whether new values were activated. Pass `TimeSpan.Zero` to bypass the 12-hour cache. |
+| `SetDefaults(IDictionary<string, object>)` | Sets in-app defaults used before the first successful fetch. |
 | `GetString(key, defaultValue)` | Returns a config value as `string`. |
 | `GetBool(key, defaultValue)` | Returns a config value as `bool`. |
 | `GetLong(key, defaultValue)` | Returns a config value as `long`. |

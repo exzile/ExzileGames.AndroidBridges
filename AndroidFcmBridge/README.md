@@ -1,10 +1,14 @@
 # AndroidFcmBridge
 
-A Java bridge + C# interop library for Firebase Cloud Messaging (FCM) on .NET Android. Provides async token retrieval, topic subscription, and push message callbacks for re-engagement notifications.
+A Java bridge + C# interop library for Firebase Cloud Messaging (FCM) on .NET Android. Provides async token retrieval, topic subscriptions, and push message callbacks for re-engagement notifications.
 
 ## Problem
 
-`FirebaseMessagingService` must be subclassed in Java and registered in the Android manifest — it cannot be implemented in C# alone. This library handles the Java side for you, forwarding token refreshes and incoming messages to your C# code via auto-generated JNI bindings.
+`FirebaseMessagingService` must be subclassed in Java and registered in the Android manifest — it cannot be implemented in C# alone. Without a compiled Java subclass, FCM token refresh events and incoming push messages are never delivered to your app.
+
+## Solution
+
+This library compiles a `FirebaseMessagingService` subclass (`ExzileFcmService`) directly into your Android project. It forwards token refreshes and incoming messages to your C# code via auto-generated JNI bindings, with no manual Java callback wiring required.
 
 ## APIs Exposed
 
@@ -16,13 +20,21 @@ A Java bridge + C# interop library for Firebase Cloud Messaging (FCM) on .NET An
 
 ## Setup
 
-### 1. Add `google-services.json`
+### 1. Add NuGet package
 
-Place your project's `google-services.json` file in the root of the consuming Android project. This file is obtained from the Firebase console and is required for FCM to initialise.
+```bash
+dotnet add package ExzileGames.AndroidFcmBridge
+```
 
-### 2. Register the service in AndroidManifest.xml
+### 2. Add google-services.json
 
-The `ExzileFcmService` must be declared in the consuming project's `AndroidManifest.xml` so that the Android system can route FCM events to the bridge:
+Place your `google-services.json` (from the Firebase Console) in the Android app project root:
+
+```xml
+<GoogleServicesJson Include="google-services.json" />
+```
+
+### 3. Register the service in AndroidManifest.xml
 
 ```xml
 <service android:name="com.exzilegames.fcmbridge.ExzileFcmService"
@@ -31,12 +43,6 @@ The `ExzileFcmService` must be declared in the consuming project's `AndroidManif
         <action android:name="com.google.firebase.MESSAGING_EVENT" />
     </intent-filter>
 </service>
-```
-
-### 3. Add project reference
-
-```xml
-<ProjectReference Include="..\AndroidFcmBridge\AndroidFcmBridge.csproj" />
 ```
 
 ### 4. Initialize in your Activity
@@ -58,14 +64,13 @@ protected override void OnCreate(Bundle? savedInstanceState)
 ```csharp
 using AndroidFcmBridge.Interop;
 
-// Listen for token refreshes (call before GetTokenAsync to avoid missing the first refresh)
+// Register listeners before calling GetTokenAsync to avoid missing the first refresh
 FcmBridgeManager.SetTokenRefreshListener(token =>
 {
+    // Send updated token to your server
     Console.WriteLine($"New FCM token: {token}");
-    // Send token to your server
 });
 
-// Listen for incoming push messages
 FcmBridgeManager.SetMessageListener(message =>
 {
     Console.WriteLine($"Push received: {message.Title} — {message.Body}");
@@ -73,17 +78,13 @@ FcmBridgeManager.SetMessageListener(message =>
         Console.WriteLine($"  {key} = {value}");
 });
 
-// Retrieve the current token
+// Retrieve current token
 var result = await FcmBridgeManager.GetTokenAsync();
 if (result.Success)
     Console.WriteLine($"FCM token: {result.Token}");
 
-// Subscribe to a topic
-var sub = await FcmBridgeManager.SubscribeToTopicAsync("news");
-if (!sub.Success)
-    Console.WriteLine($"Subscribe failed: {sub.Message}");
-
-// Unsubscribe from a topic
+// Subscribe/unsubscribe topics
+await FcmBridgeManager.SubscribeToTopicAsync("news");
 await FcmBridgeManager.UnsubscribeFromTopicAsync("news");
 ```
 

@@ -1,10 +1,10 @@
 # AndroidPlayGamesBridge
 
-A Java bridge + C# interop library that exposes Google Play Games Services v2 APIs missing from the `Xamarin.GooglePlayServices.Games.V2` NuGet bindings for .NET Android.
+A Java bridge + C# interop library that exposes Google Play Games Services v2 APIs missing from the `Xamarin.GooglePlayServices.Games.V2` NuGet binding for .NET Android.
 
 ## Problem
 
-The `Xamarin.GooglePlayServices.Games.V2` NuGet package (all versions) is missing several key PGS v2 APIs:
+The `Xamarin.GooglePlayServices.Games.V2` NuGet package is missing several key PGS v2 APIs:
 - **SnapshotsClient** (Saved Games / Cloud Save) — [dotnet/android-libraries#972](https://github.com/dotnet/android-libraries/issues/972)
 - **PlayersClient** (Player info, display name, avatar) — [dotnet/android-libraries#975](https://github.com/dotnet/android-libraries/issues/975)
 - **LeaderboardsClient**, **AchievementsClient**, **EventsClient**, **PlayerStatsClient**
@@ -13,33 +13,29 @@ These APIs exist in the Java AAR but the .NET binding generator excluded them. C
 
 ## Solution
 
-This library provides a **Java bridge class** compiled directly into your Android project. The Java class calls the native PGS v2 APIs, and C# code communicates with it via auto-generated JNI bindings. No custom binding library or AAR manipulation needed.
+This library provides a Java bridge class compiled directly into your Android project. The Java class calls the native PGS v2 APIs, and C# code communicates with it via auto-generated JNI bindings. No custom binding library or AAR manipulation needed.
 
 ## APIs Exposed
 
 | API | Methods | Status in NuGet |
 |-----|---------|-----------------|
-| **Sign-In** | `SignInAsync`, `IsAuthenticated` | Partially available |
+| **Sign-In** | `SignInAsync(bool silent)` | Partially available |
 | **Players** | `GetCurrentPlayerAsync` (ID, display name, avatar URIs) | Missing |
 | **Snapshots** | `LoadSnapshotAsync`, `SaveSnapshotAsync`, `DeleteSnapshotAsync` | Missing |
 | **Leaderboards** | `SubmitScoreAsync`, `ShowLeaderboard`, `ShowAllLeaderboards` | Missing |
-| **Achievements** | `UnlockAsync`, `IncrementAsync`, `RevealAsync`, `ShowAchievements` | Missing |
+| **Achievements** | `UnlockAchievementAsync`, `IncrementAchievementAsync`, `RevealAchievementAsync`, `ShowAchievements` | Missing |
 | **Events** | `IncrementEvent`, `LoadEventsAsync` | Missing |
-| **Player Stats** | `GetPlayerStatsAsync` (session length, churn, spend) | Missing |
+| **Player Stats** | `GetPlayerStatsAsync` (session length, churn, spend percentiles) | Missing |
 
 ## Setup
 
-### 1. Add project reference
+### 1. Add NuGet package
 
-```xml
-<ProjectReference Include="..\AndroidPlayGamesBridge\AndroidPlayGamesBridge.csproj" />
+```bash
+dotnet add package ExzileGames.AndroidPlayGamesBridge
 ```
 
-### 2. Ensure Play Games NuGet is referenced
-
-The bridge project already includes `Xamarin.GooglePlayServices.Games.V2`. Your Android project needs the same package for Play Games initialization.
-
-### 3. Initialize in your Activity
+### 2. Initialize in your Activity
 
 ```csharp
 using AndroidPlayGamesBridge.Interop;
@@ -53,15 +49,17 @@ protected override void OnCreate(Bundle? savedInstanceState)
 }
 ```
 
-### 4. Use from shared code
+### 3. Use from shared code
 
 ```csharp
 using AndroidPlayGamesBridge.Interop;
 
-// Sign in
+// Sign in (silent first, fall back to interactive)
 var signIn = await PlayGamesBridgeManager.SignInAsync(silent: true);
+if (!signIn.Success)
+    signIn = await PlayGamesBridgeManager.SignInAsync(silent: false);
 
-// Get player info (no more auth code exchange workaround!)
+// Get player info
 var player = await PlayGamesBridgeManager.GetCurrentPlayerAsync();
 if (player.Success)
     Console.WriteLine($"Hello {player.DisplayName} ({player.PlayerId})");
@@ -84,15 +82,13 @@ PlayGamesBridgeManager.ShowAchievements();
 ## Architecture
 
 ```
-Your Android Project (.csproj)
-  └── references AndroidPlayGamesBridge project
-        ├── Java/PlayGamesBridge.java     ← compiled by Android build, calls PGS v2 Java APIs
-        ├── Interop/IPlayGamesBridge.cs   ← shared interface (works on all platforms)
+Your Android Project
+  └── references ExzileGames.AndroidPlayGamesBridge (NuGet)
+        ├── Java/PlayGamesBridge.java          ← compiled by Android build; calls PGS v2 Java APIs
+        ├── Interop/IPlayGamesBridge.cs        ← platform-agnostic interface
         ├── Interop/PlayGamesBridgeManager.cs  ← static access point
         └── Interop/AndroidPlayGamesBridgeImpl.cs  ← C# wrapper calling Java via JNI
 ```
-
-The Java source is compiled directly by the Android build system. The .NET Android binding generator automatically creates C# types for the Java class and its listener interfaces. No manual AAR binding or metadata transforms needed.
 
 ## Requirements
 
