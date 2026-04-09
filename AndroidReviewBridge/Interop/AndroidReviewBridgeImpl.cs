@@ -12,12 +12,15 @@ namespace AndroidReviewBridge.Interop
         private readonly WeakReference<Activity> _activityRef;
         private readonly global::Com.Exzilegames.Reviewbridge.ReviewBridge _bridge;
 
+        /// <summary>Creates a new review bridge backed by the given Android activity.</summary>
+        /// <param name="activity">The activity used to launch the review flow on the UI thread.</param>
         public AndroidReviewBridgeImpl(Activity activity)
         {
             _activityRef = new WeakReference<Activity>(activity);
             _bridge = new global::Com.Exzilegames.Reviewbridge.ReviewBridge();
         }
 
+        /// <inheritdoc/>
         public Task<bool> RequestAndLaunchReviewAsync()
         {
             if (!_activityRef.TryGetTarget(out var activity))

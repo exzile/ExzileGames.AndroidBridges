@@ -14,9 +14,14 @@ namespace AndroidBillingBridge.Interop
         private readonly global::Com.Exzilegames.Billingbridge.BillingBridge _bridge;
         private Action<PurchaseResult>? _purchaseListener;
 
+        /// <inheritdoc/>
         public bool IsAvailable => true;
+
+        /// <inheritdoc/>
         public bool IsReady => _bridge.IsReady;
 
+        /// <summary>Creates a new billing bridge backed by the given Android activity.</summary>
+        /// <param name="activity">The activity used to run billing operations on the UI thread.</param>
         public AndroidBillingBridgeImpl(Activity activity)
         {
             _activity = activity;
@@ -27,6 +32,7 @@ namespace AndroidBillingBridge.Interop
 
         // ── Connection ──
 
+        /// <inheritdoc/>
         public Task<ConnectionResult> ConnectAsync()
         {
             var tcs = new TaskCompletionSource<ConnectionResult>();
@@ -37,11 +43,15 @@ namespace AndroidBillingBridge.Interop
             return tcs.Task;
         }
 
+        /// <inheritdoc/>
         public void Disconnect() => _bridge.EndConnection();
+
+        /// <inheritdoc/>
         public int GetConnectionState() => _bridge.ConnectionState;
 
         // ── Product Details ──
 
+        /// <inheritdoc/>
         public Task<ProductDetailsResult> QueryInAppProductsAsync(string[] productIds)
         {
             var tcs = new TaskCompletionSource<ProductDetailsResult>();
@@ -52,6 +62,7 @@ namespace AndroidBillingBridge.Interop
             return tcs.Task;
         }
 
+        /// <inheritdoc/>
         public Task<ProductDetailsResult> QuerySubscriptionsAsync(string[] productIds)
         {
             var tcs = new TaskCompletionSource<ProductDetailsResult>();
@@ -64,14 +75,17 @@ namespace AndroidBillingBridge.Interop
 
         // ── Purchase Flow ──
 
+        /// <inheritdoc/>
         public void SetPurchaseListener(Action<PurchaseResult> listener)
             => _purchaseListener = listener;
 
+        /// <inheritdoc/>
         public void LaunchPurchaseFlow(string productId)
         {
             _activity.RunOnUiThread(() => _bridge.LaunchPurchaseFlowByProductId(productId));
         }
 
+        /// <inheritdoc/>
         public void LaunchPurchaseFlowWithOffer(string productDetailsJson, string? offerToken)
         {
             _activity.RunOnUiThread(() =>
@@ -80,6 +94,7 @@ namespace AndroidBillingBridge.Interop
 
         // ── Consume & Acknowledge ──
 
+        /// <inheritdoc/>
         public Task<ConsumeResult> ConsumeAsync(string purchaseToken)
         {
             var tcs = new TaskCompletionSource<ConsumeResult>();
@@ -90,6 +105,7 @@ namespace AndroidBillingBridge.Interop
             return tcs.Task;
         }
 
+        /// <inheritdoc/>
         public Task<OperationResult> AcknowledgeAsync(string purchaseToken)
         {
             var tcs = new TaskCompletionSource<OperationResult>();
@@ -102,6 +118,7 @@ namespace AndroidBillingBridge.Interop
 
         // ── Query Purchases ──
 
+        /// <inheritdoc/>
         public Task<QueryPurchasesResult> QueryInAppPurchasesAsync()
         {
             var tcs = new TaskCompletionSource<QueryPurchasesResult>();
@@ -112,6 +129,7 @@ namespace AndroidBillingBridge.Interop
             return tcs.Task;
         }
 
+        /// <inheritdoc/>
         public Task<QueryPurchasesResult> QuerySubscriptionPurchasesAsync()
         {
             var tcs = new TaskCompletionSource<QueryPurchasesResult>();
@@ -124,9 +142,11 @@ namespace AndroidBillingBridge.Interop
 
         // ── Purchase History ──
 
+        /// <inheritdoc/>
         public Task<PurchaseHistoryResult> QueryInAppPurchaseHistoryAsync()
             => QueryPurchaseHistoryInternal("inapp");
 
+        /// <inheritdoc/>
         public Task<PurchaseHistoryResult> QuerySubscriptionPurchaseHistoryAsync()
             => QueryPurchaseHistoryInternal("subs");
 
@@ -142,6 +162,7 @@ namespace AndroidBillingBridge.Interop
 
         // ── In-App Messages (callback not available in Xamarin binding) ──
 
+        /// <inheritdoc/>
         public void ShowInAppMessages(Action<InAppMessageResult>? listener)
         {
             // InAppMessageResponseCallback is not exposed by the Xamarin binding JAR,

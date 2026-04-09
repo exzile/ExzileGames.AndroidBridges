@@ -22,6 +22,8 @@ namespace AndroidAdsBridge.Interop
         private DateTime _lastRewardedInterstitialLoadUtc = DateTime.MinValue;
         private DateTime _lastAppOpenLoadUtc = DateTime.MinValue;
 
+        /// <summary>Creates a new ads bridge backed by the given Android activity.</summary>
+        /// <param name="activity">The activity used to run ad operations on the UI thread.</param>
         public AndroidAdsBridgeImpl(Activity activity)
         {
             _activityRef = new WeakReference<Activity>(activity);
@@ -34,11 +36,13 @@ namespace AndroidAdsBridge.Interop
 
         // ── Rewarded ──
 
+        /// <inheritdoc/>
         public bool IsRewardedAdAvailable
         {
             get { try { return _rewarded.IsReady; } catch { return false; } }
         }
 
+        /// <inheritdoc/>
         public void LoadRewardedAd(string adUnitId)
         {
             if (!Throttle(ref _lastRewardedLoadUtc)) return;
@@ -46,6 +50,7 @@ namespace AndroidAdsBridge.Interop
             activity.RunOnUiThread(() => { try { _rewarded.Load(activity, adUnitId); } catch { } });
         }
 
+        /// <inheritdoc/>
         public Task<AdsBridgeRewardedResult> ShowRewardedAdAsync(CancellationToken cancellationToken = default)
         {
             if (!IsRewardedAdAvailable)
@@ -83,11 +88,13 @@ namespace AndroidAdsBridge.Interop
 
         // ── Interstitial ──
 
+        /// <inheritdoc/>
         public bool IsInterstitialAdAvailable
         {
             get { try { return _interstitial.IsReady; } catch { return false; } }
         }
 
+        /// <inheritdoc/>
         public void LoadInterstitialAd(string adUnitId)
         {
             if (!Throttle(ref _lastInterstitialLoadUtc)) return;
@@ -95,6 +102,7 @@ namespace AndroidAdsBridge.Interop
             activity.RunOnUiThread(() => { try { _interstitial.Load(activity, adUnitId); } catch { } });
         }
 
+        /// <inheritdoc/>
         public Task<bool> ShowInterstitialAdAsync()
         {
             if (!IsInterstitialAdAvailable) return Task.FromResult(false);
@@ -126,11 +134,13 @@ namespace AndroidAdsBridge.Interop
 
         // ── Rewarded Interstitial ──
 
+        /// <inheritdoc/>
         public bool IsRewardedInterstitialAdAvailable
         {
             get { try { return _rewardedInterstitial.IsReady; } catch { return false; } }
         }
 
+        /// <inheritdoc/>
         public void LoadRewardedInterstitialAd(string adUnitId)
         {
             if (!Throttle(ref _lastRewardedInterstitialLoadUtc)) return;
@@ -138,6 +148,7 @@ namespace AndroidAdsBridge.Interop
             activity.RunOnUiThread(() => { try { _rewardedInterstitial.Load(activity, adUnitId); } catch { } });
         }
 
+        /// <inheritdoc/>
         public Task<AdsBridgeRewardedResult> ShowRewardedInterstitialAdAsync(CancellationToken cancellationToken = default)
         {
             if (!IsRewardedInterstitialAdAvailable)
@@ -175,11 +186,13 @@ namespace AndroidAdsBridge.Interop
 
         // ── App Open ──
 
+        /// <inheritdoc/>
         public bool IsAppOpenAdAvailable
         {
             get { try { return _appOpen.IsReady; } catch { return false; } }
         }
 
+        /// <inheritdoc/>
         public void LoadAppOpenAd(string adUnitId)
         {
             if (!Throttle(ref _lastAppOpenLoadUtc)) return;
@@ -187,6 +200,7 @@ namespace AndroidAdsBridge.Interop
             activity.RunOnUiThread(() => { try { _appOpen.Load(activity, adUnitId); } catch { } });
         }
 
+        /// <inheritdoc/>
         public Task<bool> ShowAppOpenAdAsync()
         {
             if (!IsAppOpenAdAvailable) return Task.FromResult(false);
@@ -218,6 +232,7 @@ namespace AndroidAdsBridge.Interop
 
         // ── Banner ──
 
+        /// <inheritdoc/>
         public void ShowBannerAd(string adUnitId, BannerPosition position = BannerPosition.Bottom)
         {
             if (!_activityRef.TryGetTarget(out var activity)) return;
@@ -226,16 +241,19 @@ namespace AndroidAdsBridge.Interop
                 : global::Com.Exzilegames.Adsbridge.BannerBridge.PositionBottom);
         }
 
+        /// <inheritdoc/>
         public void HideBannerAd()
         {
             if (_activityRef.TryGetTarget(out var activity)) _banner.Hide(activity);
         }
 
+        /// <inheritdoc/>
         public void RevealBannerAd()
         {
             if (_activityRef.TryGetTarget(out var activity)) _banner.Reveal(activity);
         }
 
+        /// <inheritdoc/>
         public void DestroyBannerAd()
         {
             if (_activityRef.TryGetTarget(out var activity)) _banner.Destroy(activity);
