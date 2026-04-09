@@ -11,5 +11,9 @@
     <LangVersion>latest</LangVersion>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
+    <!-- Suppress binding generator warnings for compiled Java sources:
+         BG8403: type name matches enclosing namespace (e.g. BillingBridge in billingbridge)
+         BG8501: cannot infer event name for setListener methods -->
+    <NoWarn>$(NoWarn);BG8403;BG8501</NoWarn>
   </PropertyGroup>
 </Project>
