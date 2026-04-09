@@ -1,0 +1,5 @@
+<Project>
+  <ItemGroup Condition="$(TargetFramework.Contains('android'))">
+    <AndroidJavaSource Include="$(MSBuildThisFileDirectory)Java\**\*.java" />
+  </ItemGroup>
+</Project>
