@@ -71,9 +71,7 @@ namespace AndroidRemoteConfigBridge.Interop
         /// <inheritdoc/>
         public void SetDefaults(IDictionary<string, object> defaults)
         {
-            var map = new Java.Util.HashMap();
-            foreach (var (key, value) in defaults)
-                map.Put(key, value?.ToString());
+            var map = new Dictionary<string, object>(defaults);
             _config.SetDefaultsAsync(map);
         }
 

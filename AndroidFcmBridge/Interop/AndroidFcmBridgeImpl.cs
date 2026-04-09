@@ -68,7 +68,7 @@ namespace AndroidFcmBridge.Interop
 
         // ── JSON deserialization helpers ──
 
-        private static IReadOnlyDictionary<string, string> ParseDataJson(string dataJson)
+        private static IReadOnlyDictionary<string, string> ParseDataJson(string? dataJson)
         {
             if (string.IsNullOrEmpty(dataJson) || dataJson == "{}")
                 return new Dictionary<string, string>();
