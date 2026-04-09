@@ -71,8 +71,17 @@ namespace AndroidRemoteConfigBridge.Interop
         /// <inheritdoc/>
         public void SetDefaults(IDictionary<string, object> defaults)
         {
-            var map = new Dictionary<string, object>(defaults);
-            _config.SetDefaultsAsync(map);
+            // The Xamarin binding only exposes SetDefaultsAsync(int resourceId).
+            // The map-based overload must be called directly via JNI.
+            using var map = new Java.Util.HashMap();
+            foreach (var (key, value) in defaults)
+                map.Put(new Java.Lang.String(key), new Java.Lang.String(value?.ToString() ?? ""));
+
+            var classRef = JNIEnv.FindClass("com/google/firebase/remoteconfig/FirebaseRemoteConfig");
+            var methodId = JNIEnv.GetMethodID(classRef, "setDefaultsAsync",
+                "(Ljava/util/Map;)Lcom/google/android/gms/tasks/Task;");
+            JNIEnv.CallObjectMethod(_config.Handle, methodId, new JValue(map));
+            JNIEnv.DeleteLocalRef(classRef);
         }
 
         /// <inheritdoc/>
