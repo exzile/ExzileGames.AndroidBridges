@@ -2,5 +2,6 @@
   <Folder Name="/src/">
     <Project Path="AndroidPlayGamesBridge/AndroidPlayGamesBridge.csproj" />
     <Project Path="AndroidBillingBridge/AndroidBillingBridge.csproj" />
+    <Project Path="AndroidAdsBridge/AndroidAdsBridge.csproj" />
   </Folder>
 </Solution>

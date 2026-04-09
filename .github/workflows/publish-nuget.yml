@@ -62,6 +62,13 @@ jobs:
             -p:Version=${{ steps.version.outputs.version }} \
             -o ./artifacts
 
+      - name: Pack AndroidAdsBridge
+        run: |
+          dotnet pack AndroidAdsBridge/AndroidAdsBridge.csproj \
+            -c Release \
+            -p:Version=${{ steps.version.outputs.version }} \
+            -o ./artifacts
+
       - name: Push to NuGet.org
         run: |
           dotnet nuget push ./artifacts/*.nupkg \
