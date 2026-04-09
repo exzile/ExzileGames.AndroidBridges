@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net10.0-android36.0</TargetFrameworks>
+    <RootNamespace>AndroidAnalyticsBridge</RootNamespace>
+    <PackageId>ExzileGames.AndroidAnalyticsBridge</PackageId>
+    <Description>C# wrapper for Firebase Analytics on .NET Android. Provides a clean Dictionary-based event logging API over the Xamarin Firebase Analytics binding.</Description>
+    <PackageTags>android;firebase;analytics;events;monogame;maui;dotnet-android</PackageTags>
+    <PackageProjectUrl>https://github.com/exzile/ExzileGames.AndroidBridges/tree/main/AndroidAnalyticsBridge</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('android'))">
+    <UseAndroid>true</UseAndroid>
+    <AndroidMinSdkVersion>23</AndroidMinSdkVersion>
+  </PropertyGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('android'))">
+    <PackageReference Include="Xamarin.Firebase.Analytics" Version="123.0.0.3" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('android'))">
+    <Compile Remove="Interop\AndroidAnalyticsBridgeImpl.cs" />
+  </ItemGroup>
+</Project>

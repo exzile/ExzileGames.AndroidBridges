@@ -1,0 +1,25 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net10.0-android36.0</TargetFrameworks>
+    <RootNamespace>AndroidRemoteConfigBridge</RootNamespace>
+    <PackageId>ExzileGames.AndroidRemoteConfigBridge</PackageId>
+    <Description>C# wrapper for Firebase Remote Config on .NET Android. Provides typed value access and a clean async fetch/activate API over the Xamarin Firebase Remote Config binding.</Description>
+    <PackageTags>android;firebase;remote-config;feature-flags;live-ops;monogame;maui;dotnet-android</PackageTags>
+    <PackageProjectUrl>https://github.com/exzile/ExzileGames.AndroidBridges/tree/main/AndroidRemoteConfigBridge</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('android'))">
+    <UseAndroid>true</UseAndroid>
+    <AndroidMinSdkVersion>23</AndroidMinSdkVersion>
+  </PropertyGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('android'))">
+    <PackageReference Include="Xamarin.Firebase.Config" Version="123.0.1.2" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('android'))">
+    <Compile Remove="Interop\AndroidRemoteConfigBridgeImpl.cs" />
+  </ItemGroup>
+</Project>

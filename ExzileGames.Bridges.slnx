@@ -4,5 +4,9 @@
     <Project Path="AndroidBillingBridge/AndroidBillingBridge.csproj" />
     <Project Path="AndroidAdsBridge/AndroidAdsBridge.csproj" />
     <Project Path="AndroidReviewBridge/AndroidReviewBridge.csproj" />
+    <Project Path="AndroidAppUpdateBridge/AndroidAppUpdateBridge.csproj" />
+    <Project Path="AndroidCrashlyticsBridge/AndroidCrashlyticsBridge.csproj" />
+    <Project Path="AndroidAnalyticsBridge/AndroidAnalyticsBridge.csproj" />
+    <Project Path="AndroidRemoteConfigBridge/AndroidRemoteConfigBridge.csproj" />
   </Folder>
 </Solution>

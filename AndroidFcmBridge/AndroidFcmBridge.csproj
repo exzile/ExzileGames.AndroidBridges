@@ -1,0 +1,26 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net10.0-android36.0</TargetFrameworks>
+    <RootNamespace>AndroidFcmBridge</RootNamespace>
+    <PackageId>ExzileGames.AndroidFcmBridge</PackageId>
+    <Description>Java bridge for Firebase Cloud Messaging on .NET Android. Provides async token retrieval, topic subscription, and message callbacks for push notifications.</Description>
+    <PackageTags>android;firebase;fcm;push-notifications;cloud-messaging;monogame;maui;dotnet-android</PackageTags>
+    <PackageProjectUrl>https://github.com/exzile/ExzileGames.AndroidBridges/tree/main/AndroidFcmBridge</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+  <PropertyGroup Condition="$(TargetFramework.Contains('android'))">
+    <UseAndroid>true</UseAndroid>
+    <AndroidMinSdkVersion>23</AndroidMinSdkVersion>
+  </PropertyGroup>
+  <ItemGroup Condition="$(TargetFramework.Contains('android'))">
+    <PackageReference Include="Xamarin.Firebase.Messaging" Version="125.0.1.2" />
+    <AndroidJavaSource Include="Java\**\*.java" />
+  </ItemGroup>
+  <ItemGroup Condition="!$(TargetFramework.Contains('android'))">
+    <Compile Remove="Interop\AndroidFcmBridgeImpl.cs" />
+  </ItemGroup>
+</Project>

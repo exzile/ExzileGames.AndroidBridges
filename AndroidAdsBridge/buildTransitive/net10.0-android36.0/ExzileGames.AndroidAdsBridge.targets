@@ -1,5 +1,5 @@
 <Project>
   <ItemGroup Condition="$(TargetFramework.Contains('android'))">
-    <AndroidJavaSource Include="$(MSBuildThisFileDirectory)Java\**\*.java" />
+    <AndroidJavaSource Include="$(MSBuildThisFileDirectory)Java\**\*.java" Bind="false" />
   </ItemGroup>
 </Project>

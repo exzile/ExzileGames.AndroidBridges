@@ -1,0 +1,30 @@
+<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net10.0;net10.0-android36.0</TargetFrameworks>
+    <RootNamespace>AndroidCrashlyticsBridge</RootNamespace>
+    <PackageId>ExzileGames.AndroidCrashlyticsBridge</PackageId>
+    <Description>Java bridge for Firebase Crashlytics on .NET Android. Records C# exceptions with proper type grouping, custom keys, and user identification.</Description>
+    <PackageTags>android;firebase;crashlytics;crash-reporting;monogame;maui;dotnet-android</PackageTags>
+    <PackageProjectUrl>https://github.com/exzile/ExzileGames.AndroidBridges/tree/main/AndroidCrashlyticsBridge</PackageProjectUrl>
+    <PackageReadmeFile>README.md</PackageReadmeFile>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Include="README.md" Pack="true" PackagePath="\" />
+    <None Include="LICENSE" Pack="true" PackagePath="\" />
+  </ItemGroup>
+
+  <PropertyGroup Condition="$(TargetFramework.Contains('android'))">
+    <UseAndroid>true</UseAndroid>
+    <AndroidMinSdkVersion>23</AndroidMinSdkVersion>
+  </PropertyGroup>
+
+  <ItemGroup Condition="$(TargetFramework.Contains('android'))">
+    <PackageReference Include="Xamarin.Firebase.Crashlytics" Version="120.0.4.1" />
+    <AndroidJavaSource Include="Java\**\*.java" />
+  </ItemGroup>
+
+  <ItemGroup Condition="!$(TargetFramework.Contains('android'))">
+    <Compile Remove="Interop\AndroidCrashlyticsBridgeImpl.cs" />
+  </ItemGroup>
+</Project>

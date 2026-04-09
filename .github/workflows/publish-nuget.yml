@@ -76,6 +76,48 @@ jobs:
             -p:Version=${{ steps.version.outputs.version }} \
             -o ./artifacts
 
+      - name: Pack AndroidConsentBridge
+        run: |
+          dotnet pack AndroidConsentBridge/AndroidConsentBridge.csproj \
+            -c Release \
+            -p:Version=${{ steps.version.outputs.version }} \
+            -o ./artifacts
+
+      - name: Pack AndroidFcmBridge
+        run: |
+          dotnet pack AndroidFcmBridge/AndroidFcmBridge.csproj \
+            -c Release \
+            -p:Version=${{ steps.version.outputs.version }} \
+            -o ./artifacts
+
+      - name: Pack AndroidCrashlyticsBridge
+        run: |
+          dotnet pack AndroidCrashlyticsBridge/AndroidCrashlyticsBridge.csproj \
+            -c Release \
+            -p:Version=${{ steps.version.outputs.version }} \
+            -o ./artifacts
+
+      - name: Pack AndroidAppUpdateBridge
+        run: |
+          dotnet pack AndroidAppUpdateBridge/AndroidAppUpdateBridge.csproj \
+            -c Release \
+            -p:Version=${{ steps.version.outputs.version }} \
+            -o ./artifacts
+
+      - name: Pack AndroidAnalyticsBridge
+        run: |
+          dotnet pack AndroidAnalyticsBridge/AndroidAnalyticsBridge.csproj \
+            -c Release \
+            -p:Version=${{ steps.version.outputs.version }} \
+            -o ./artifacts
+
+      - name: Pack AndroidRemoteConfigBridge
+        run: |
+          dotnet pack AndroidRemoteConfigBridge/AndroidRemoteConfigBridge.csproj \
+            -c Release \
+            -p:Version=${{ steps.version.outputs.version }} \
+            -o ./artifacts
+
       - name: Push to NuGet.org
         run: |
           dotnet nuget push ./artifacts/*.nupkg \
