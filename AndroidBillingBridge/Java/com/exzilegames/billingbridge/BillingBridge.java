@@ -17,6 +17,7 @@ import com.android.billingclient.api.Purchase;
 import com.android.billingclient.api.PurchasesResponseListener;
 import com.android.billingclient.api.PurchasesUpdatedListener;
 import com.android.billingclient.api.QueryProductDetailsParams;
+import com.android.billingclient.api.QueryProductDetailsResult;
 import com.android.billingclient.api.InAppMessageParams;
 import com.android.billingclient.api.QueryPurchasesParams;
 
@@ -156,8 +157,9 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                 .setProductList(products)
                 .build();
 
-        billingClient.queryProductDetailsAsync(params, (result, detailsList) -> {
+        billingClient.queryProductDetailsAsync(params, (result, detailsResult) -> {
             boolean ok = result.getResponseCode() == BillingClient.BillingResponseCode.OK;
+            List<ProductDetails> detailsList = detailsResult.getProductDetailsList();
             String json = productDetailsToJson(detailsList);
             listener.onProductDetailsResult(ok, json, result.getDebugMessage());
         });
@@ -193,7 +195,8 @@ public final class BillingBridge implements PurchasesUpdatedListener {
                     .setProductList(products)
                     .build();
 
-            billingClient.queryProductDetailsAsync(qParams, (result, detailsList) -> {
+            billingClient.queryProductDetailsAsync(qParams, (result, detailsResult) -> {
+                List<ProductDetails> detailsList = detailsResult.getProductDetailsList();
                 if (result.getResponseCode() != BillingClient.BillingResponseCode.OK
                         || detailsList == null || detailsList.isEmpty()) {
                     if (purchaseListener != null) {
