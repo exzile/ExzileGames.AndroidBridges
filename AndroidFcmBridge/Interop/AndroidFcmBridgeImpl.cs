@@ -91,8 +91,8 @@ namespace AndroidFcmBridge.Interop
         {
             private readonly AndroidFcmBridgeImpl _parent;
             public TokenListenerImpl(AndroidFcmBridgeImpl parent) => _parent = parent;
-            public void OnNewToken(string token)
-                => _parent._tokenRefreshListener?.Invoke(token);
+            public void OnNewToken(string? token)
+                => _parent._tokenRefreshListener?.Invoke(token ?? string.Empty);
         }
 
         private sealed class MessageListenerImpl : Java.Lang.Object,
@@ -100,10 +100,10 @@ namespace AndroidFcmBridge.Interop
         {
             private readonly AndroidFcmBridgeImpl _parent;
             public MessageListenerImpl(AndroidFcmBridgeImpl parent) => _parent = parent;
-            public void OnMessageReceived(string title, string body, string dataJson)
+            public void OnMessageReceived(string? title, string? body, string? dataJson)
             {
                 var data = ParseDataJson(dataJson);
-                _parent._messageListener?.Invoke(new FcmMessage(title, body, data));
+                _parent._messageListener?.Invoke(new FcmMessage(title ?? string.Empty, body ?? string.Empty, data));
             }
         }
 
@@ -112,9 +112,9 @@ namespace AndroidFcmBridge.Interop
         {
             private readonly TaskCompletionSource<FcmTokenResult> _tcs;
             public TokenCallbackImpl(TaskCompletionSource<FcmTokenResult> tcs) => _tcs = tcs;
-            public void OnToken(string token)
+            public void OnToken(string? token)
                 => _tcs.TrySetResult(new FcmTokenResult(true, token, null));
-            public void OnError(string message)
+            public void OnError(string? message)
                 => _tcs.TrySetResult(new FcmTokenResult(false, null, message));
         }
 
@@ -125,7 +125,7 @@ namespace AndroidFcmBridge.Interop
             public ResultCallbackImpl(TaskCompletionSource<FcmOperationResult> tcs) => _tcs = tcs;
             public void OnSuccess()
                 => _tcs.TrySetResult(new FcmOperationResult(true, null));
-            public void OnFailure(string message)
+            public void OnFailure(string? message)
                 => _tcs.TrySetResult(new FcmOperationResult(false, message));
         }
     }

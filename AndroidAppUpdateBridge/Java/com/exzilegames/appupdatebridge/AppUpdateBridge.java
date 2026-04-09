@@ -101,14 +101,12 @@ public final class AppUpdateBridge {
                     AppUpdateOptions options = AppUpdateOptions.newBuilder(AppUpdateType.IMMEDIATE).build();
 
                     try {
-                        manager.startUpdateFlowForResult(info, activity, options, requestCode)
-                                .addOnSuccessListener(result -> {
-                                    if (listener != null) listener.onSuccess();
-                                })
-                                .addOnFailureListener(e -> {
-                                    if (listener != null)
-                                        listener.onFailure(e.getMessage() != null ? e.getMessage() : "startUpdateFlowForResult failed");
-                                });
+                        boolean started = manager.startUpdateFlowForResult(info, activity, options, requestCode);
+                        if (!started) {
+                            if (listener != null)
+                                listener.onFailure("startUpdateFlowForResult returned false");
+                        }
+                        // Success is delivered via onActivityResult — no callback chaining needed.
                     } catch (Exception e) {
                         if (listener != null)
                             listener.onFailure(e.getMessage() != null ? e.getMessage() : "startImmediateUpdate exception");
@@ -165,11 +163,12 @@ public final class AppUpdateBridge {
                     AppUpdateOptions options = AppUpdateOptions.newBuilder(AppUpdateType.FLEXIBLE).build();
 
                     try {
-                        manager.startUpdateFlowForResult(info, activity, options, requestCode)
-                                .addOnFailureListener(e -> {
-                                    if (listener != null)
-                                        listener.onFailed(e.getMessage() != null ? e.getMessage() : "startUpdateFlowForResult failed");
-                                });
+                        boolean started = manager.startUpdateFlowForResult(info, activity, options, requestCode);
+                        if (!started) {
+                            if (listener != null)
+                                listener.onFailed("startUpdateFlowForResult returned false");
+                        }
+                        // Progress is delivered via the registered flexibleListener — no chaining needed.
                     } catch (Exception e) {
                         if (listener != null)
                             listener.onFailed(e.getMessage() != null ? e.getMessage() : "startFlexibleUpdate exception");

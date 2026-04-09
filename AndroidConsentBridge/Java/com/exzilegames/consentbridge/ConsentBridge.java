@@ -37,12 +37,9 @@ public final class ConsentBridge {
     public interface ConsentFormListener {
         /**
          * Called when the consent form flow is complete (or skipped when not required).
-         *
-         * @param canRequestAds  whether ads may be requested given the current consent state.
-         * @param consentStatus  the raw UMP consent status integer (0=UNKNOWN, 1=REQUIRED,
-         *                       2=NOT_REQUIRED, 3=OBTAINED).
-         * @param errorCode      0 if no error occurred, otherwise the UMP {@link FormError} code.
-         * @param errorMessage   human-readable error description, or empty string on success.
+         * Parameters: canRequestAds (whether ads may be requested), consentStatus (0=UNKNOWN,
+         * 1=REQUIRED, 2=NOT_REQUIRED, 3=OBTAINED), errorCode (0 on success, UMP FormError code
+         * otherwise), errorMessage (human-readable description, empty on success).
          */
         void onComplete(boolean canRequestAds, int consentStatus, int errorCode, String errorMessage);
     }
