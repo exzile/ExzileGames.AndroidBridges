@@ -3,5 +3,6 @@
     <Project Path="AndroidPlayGamesBridge/AndroidPlayGamesBridge.csproj" />
     <Project Path="AndroidBillingBridge/AndroidBillingBridge.csproj" />
     <Project Path="AndroidAdsBridge/AndroidAdsBridge.csproj" />
+    <Project Path="AndroidReviewBridge/AndroidReviewBridge.csproj" />
   </Folder>
 </Solution>

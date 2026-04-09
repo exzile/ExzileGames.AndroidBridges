@@ -69,6 +69,13 @@ jobs:
             -p:Version=${{ steps.version.outputs.version }} \
             -o ./artifacts
 
+      - name: Pack AndroidReviewBridge
+        run: |
+          dotnet pack AndroidReviewBridge/AndroidReviewBridge.csproj \
+            -c Release \
+            -p:Version=${{ steps.version.outputs.version }} \
+            -o ./artifacts
+
       - name: Push to NuGet.org
         run: |
           dotnet nuget push ./artifacts/*.nupkg \
