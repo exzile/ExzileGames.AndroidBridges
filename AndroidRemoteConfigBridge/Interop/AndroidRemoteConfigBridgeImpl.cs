@@ -1,5 +1,6 @@
 #if ANDROID
 using Android.Gms.Tasks;
+using Android.Runtime;
 using Firebase.RemoteConfig;
 
 namespace AndroidRemoteConfigBridge.Interop
