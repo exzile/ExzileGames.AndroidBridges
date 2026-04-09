@@ -12,8 +12,11 @@ namespace AndroidPlayGamesBridge.Interop
         private readonly Activity _activity;
         private readonly global::Com.Exzilegames.Playgamesbridge.PlayGamesBridge _bridge;
 
+        /// <inheritdoc/>
         public bool IsAvailable => true;
 
+        /// <summary>Creates a new Play Games bridge backed by the given Android activity.</summary>
+        /// <param name="activity">The activity used to run Play Games operations on the UI thread.</param>
         public AndroidPlayGamesBridgeImpl(Activity activity)
         {
             _activity = activity;
@@ -22,6 +25,7 @@ namespace AndroidPlayGamesBridge.Interop
 
         // ── Sign-In ──
 
+        /// <inheritdoc/>
         public Task<SignInResult> SignInAsync(bool silent = true)
         {
             var tcs = new TaskCompletionSource<SignInResult>();
@@ -34,6 +38,7 @@ namespace AndroidPlayGamesBridge.Interop
 
         // ── Players ──
 
+        /// <inheritdoc/>
         public Task<PlayerInfo> GetCurrentPlayerAsync()
         {
             var tcs = new TaskCompletionSource<PlayerInfo>();
@@ -46,6 +51,7 @@ namespace AndroidPlayGamesBridge.Interop
 
         // ── Snapshots ──
 
+        /// <inheritdoc/>
         public Task<SnapshotLoadResult> LoadSnapshotAsync(string snapshotName)
         {
             var tcs = new TaskCompletionSource<SnapshotLoadResult>();
@@ -56,6 +62,7 @@ namespace AndroidPlayGamesBridge.Interop
             return tcs.Task;
         }
 
+        /// <inheritdoc/>
         public Task<SnapshotSaveResult> SaveSnapshotAsync(string snapshotName, string data, string description)
         {
             var tcs = new TaskCompletionSource<SnapshotSaveResult>();
@@ -66,6 +73,7 @@ namespace AndroidPlayGamesBridge.Interop
             return tcs.Task;
         }
 
+        /// <inheritdoc/>
         public Task<SnapshotDeleteResult> DeleteSnapshotAsync(string snapshotName)
         {
             var tcs = new TaskCompletionSource<SnapshotDeleteResult>();
@@ -78,6 +86,7 @@ namespace AndroidPlayGamesBridge.Interop
 
         // ── Leaderboards ──
 
+        /// <inheritdoc/>
         public Task<OperationResult> SubmitScoreAsync(string leaderboardId, long score)
         {
             var tcs = new TaskCompletionSource<OperationResult>();
@@ -88,11 +97,13 @@ namespace AndroidPlayGamesBridge.Interop
             return tcs.Task;
         }
 
+        /// <inheritdoc/>
         public void ShowLeaderboard(string leaderboardId)
         {
             _activity.RunOnUiThread(() => _bridge.ShowLeaderboard(_activity, leaderboardId));
         }
 
+        /// <inheritdoc/>
         public void ShowAllLeaderboards()
         {
             _activity.RunOnUiThread(() => _bridge.ShowAllLeaderboards(_activity));
@@ -100,6 +111,7 @@ namespace AndroidPlayGamesBridge.Interop
 
         // ── Achievements ──
 
+        /// <inheritdoc/>
         public Task<OperationResult> UnlockAchievementAsync(string achievementId)
         {
             var tcs = new TaskCompletionSource<OperationResult>();
@@ -110,6 +122,7 @@ namespace AndroidPlayGamesBridge.Interop
             return tcs.Task;
         }
 
+        /// <inheritdoc/>
         public Task<OperationResult> IncrementAchievementAsync(string achievementId, int steps)
         {
             var tcs = new TaskCompletionSource<OperationResult>();
@@ -120,6 +133,7 @@ namespace AndroidPlayGamesBridge.Interop
             return tcs.Task;
         }
 
+        /// <inheritdoc/>
         public Task<OperationResult> RevealAchievementAsync(string achievementId)
         {
             var tcs = new TaskCompletionSource<OperationResult>();
@@ -130,6 +144,7 @@ namespace AndroidPlayGamesBridge.Interop
             return tcs.Task;
         }
 
+        /// <inheritdoc/>
         public void ShowAchievements()
         {
             _activity.RunOnUiThread(() => _bridge.ShowAchievements(_activity));
@@ -137,11 +152,13 @@ namespace AndroidPlayGamesBridge.Interop
 
         // ── Events ──
 
+        /// <inheritdoc/>
         public void IncrementEvent(string eventId, int steps)
         {
             _activity.RunOnUiThread(() => _bridge.IncrementEvent(_activity, eventId, steps));
         }
 
+        /// <inheritdoc/>
         public Task<EventsResult> LoadEventsAsync()
         {
             var tcs = new TaskCompletionSource<EventsResult>();
@@ -154,11 +171,13 @@ namespace AndroidPlayGamesBridge.Interop
 
         // ── Recall (not available in Xamarin binding) ──
 
+        /// <inheritdoc/>
         public Task<RecallAccessResult> RequestRecallAccessAsync(string sessionId)
             => Task.FromResult(new RecallAccessResult(false, null, "RecallClient API is not available in the Xamarin binding"));
 
         // ── Player Stats ──
 
+        /// <inheritdoc/>
         public Task<PlayerStatsResult> GetPlayerStatsAsync()
         {
             var tcs = new TaskCompletionSource<PlayerStatsResult>();
