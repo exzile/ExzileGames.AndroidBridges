@@ -7,7 +7,6 @@
     <PackageTags>android;google-play-games;play-games-services;snapshots;cloud-save;monogame;maui;xamarin;dotnet-android</PackageTags>
     <PackageProjectUrl>https://github.com/exzile/ExzileGames.AndroidBridges/tree/main/AndroidPlayGamesBridge</PackageProjectUrl>
     <PackageReadmeFile>README.md</PackageReadmeFile>
-    <Version>1.0.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
@@ -21,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('android'))">
-    <PackageReference Include="Xamarin.GooglePlayServices.Games.V2" Version="121.0.0.3" />
+    <PackageReference Include="Xamarin.GooglePlayServices.Games.V2" Version="121.0.0.4" />
     <AndroidJavaSource Include="Java\**\*.java" />
   </ItemGroup>
 

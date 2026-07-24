@@ -9,10 +9,10 @@ Each package compiles Java source directly into your Android app and exposes nat
 | Package | NuGet | Description |
 |---------|-------|-------------|
 | [AndroidPlayGamesBridge](AndroidPlayGamesBridge/) | `ExzileGames.AndroidPlayGamesBridge` | Exposes missing PGS v2 APIs: SnapshotsClient, PlayersClient, LeaderboardsClient, AchievementsClient |
-| [AndroidBillingBridge](AndroidBillingBridge/) | `ExzileGames.AndroidBillingBridge` | Clean async Billing Library v8 API: products, purchases, consume, subscriptions, history |
+| [AndroidBillingBridge](AndroidBillingBridge/) | `ExzileGames.AndroidBillingBridge` | Clean async Billing Library v9 API: products, purchases, consume, subscriptions, history |
 | [AndroidAdsBridge](AndroidAdsBridge/) | `ExzileGames.AndroidAdsBridge` | AdMob bridge: rewarded, interstitial, rewarded interstitial, app open, and banner ads |
 | [AndroidReviewBridge](AndroidReviewBridge/) | `ExzileGames.AndroidReviewBridge` | Google Play In-App Review API: trigger the review prompt async |
-| [AndroidConsentBridge](AndroidConsentBridge/) | `ExzileGames.AndroidConsentBridge` | UMP v3 consent collection for GDPR/CCPA — call before showing any ads |
+| [AndroidConsentBridge](AndroidConsentBridge/) | `ExzileGames.AndroidConsentBridge` | UMP v4 consent collection for GDPR/CCPA — call before showing any ads |
 | [AndroidFcmBridge](AndroidFcmBridge/) | `ExzileGames.AndroidFcmBridge` | Firebase Cloud Messaging: token retrieval, topic subscriptions, push message callbacks |
 | [AndroidCrashlyticsBridge](AndroidCrashlyticsBridge/) | `ExzileGames.AndroidCrashlyticsBridge` | Firebase Crashlytics with proper C# exception type grouping |
 | [AndroidAppUpdateBridge](AndroidAppUpdateBridge/) | `ExzileGames.AndroidAppUpdateBridge` | Google Play In-App Updates: immediate and flexible update flows |
@@ -76,7 +76,19 @@ dotnet build ExzileGames.Bridges.slnx
 dotnet pack ExzileGames.Bridges.slnx --configuration Release --output ./artifacts
 ```
 
-Packages are published to NuGet.org automatically by GitHub Actions on every push to `main`.
+## Versioning and Publishing
+
+All packages share the version declared in `Directory.Build.props`. Use semantic
+versioning and update that value before merging a release:
+
+- Patch (`1.1.1`): backward-compatible fixes
+- Minor (`1.2.0`): backward-compatible features or significant dependency updates
+- Major (`2.0.0`): breaking API changes
+
+Packages are published to NuGet.org automatically by GitHub Actions on every push
+to `main`. The workflow uses the shared version, and NuGet safely skips packages
+that already exist. A `v*` tag or manual workflow dispatch may override the
+version for an intentional release.
 
 ## Adding a New Bridge
 

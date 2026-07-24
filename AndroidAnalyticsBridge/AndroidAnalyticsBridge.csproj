@@ -17,7 +17,7 @@
     <AndroidMinSdkVersion>23</AndroidMinSdkVersion>
   </PropertyGroup>
   <ItemGroup Condition="$(TargetFramework.Contains('android'))">
-    <PackageReference Include="Xamarin.Firebase.Analytics" Version="123.0.0.3" />
+    <PackageReference Include="Xamarin.Firebase.Analytics" Version="123.2.0.1" />
   </ItemGroup>
   <ItemGroup Condition="!$(TargetFramework.Contains('android'))">
     <Compile Remove="Interop\AndroidAnalyticsBridgeImpl.cs" />

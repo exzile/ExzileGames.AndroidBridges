@@ -9,7 +9,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: "Version override (e.g. 1.2.3). Leave blank to auto-increment patch."
+        description: "Version override (e.g. 1.2.3). Leave blank to use Directory.Build.props."
         required: false
 
 jobs:
@@ -39,12 +39,8 @@ jobs:
           elif [[ "${{ github.ref }}" == refs/tags/v* ]]; then
             echo "version=${GITHUB_REF#refs/tags/v}" >> "$GITHUB_OUTPUT"
           else
-            # Read base version from csproj and auto-increment patch using run number
-            BASE=$(grep -oPm1 '(?<=<Version>)[^<]+' AndroidBillingBridge/AndroidBillingBridge.csproj)
-            MAJOR=$(echo "$BASE" | cut -d. -f1)
-            MINOR=$(echo "$BASE" | cut -d. -f2)
-            PATCH=${{ github.run_number }}
-            echo "version=${MAJOR}.${MINOR}.${PATCH}" >> "$GITHUB_OUTPUT"
+            VERSION=$(grep -oPm1 '(?<=<Version>)[^<]+' Directory.Build.props)
+            echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
           fi
           echo "Resolved version: $(grep 'version=' "$GITHUB_OUTPUT" | tail -1)"
 
