@@ -1,6 +1,6 @@
 # AndroidBillingBridge
 
-A Java bridge + C# interop library for Google Play Billing Library v8 on .NET Android. Provides direct access to the full Billing API without reflection hacks or incomplete NuGet bindings.
+A Java bridge + C# interop library for Google Play Billing Library v9 on .NET Android. Provides direct access to the full Billing API without reflection hacks or incomplete NuGet bindings.
 
 ## Problem
 
