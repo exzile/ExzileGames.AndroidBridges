@@ -20,7 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup Condition="$(TargetFramework.Contains('android'))">
-    <PackageReference Include="Xamarin.GooglePlayServices.Games.V2" Version="121.0.0.4" />
+    <PackageReference Include="Xamarin.GooglePlayServices.Games.V2" Version="122.1.0.1" />
     <AndroidJavaSource Include="Java\**\*.java" />
   </ItemGroup>
 

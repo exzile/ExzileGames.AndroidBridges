@@ -43,6 +43,9 @@ bool completed = await ReviewBridgeManager.RequestAndLaunchReviewAsync();
 
 - Google does not expose whether the user actually submitted a review — the result only indicates whether the flow completed without error.
 - Play may suppress the prompt silently if the user has been prompted recently or has already reviewed the app. This is by design and cannot be overridden.
+- Debug and sideloaded builds never get the real card. To test the flow there, set
+  `UseFakeManager = true` on `AndroidReviewBridgeImpl` (Play's `FakeReviewManager`: the flow
+  completes without a card). Keep it off in release builds.
 - Call the flow at a natural pause point (post-level, post-session) — not in response to a button press or a direct ask.
 
 ## License

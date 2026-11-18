@@ -20,6 +20,13 @@ namespace AndroidReviewBridge.Interop
             _bridge = new global::Com.Exzilegames.Reviewbridge.ReviewBridge();
         }
 
+        /// <summary>
+        /// When true, Play's <c>FakeReviewManager</c> runs the flow instead of the real one: it
+        /// completes without showing a card. For testing debug or sideloaded builds, where the
+        /// real manager never shows one. Leave false in release builds.
+        /// </summary>
+        public bool UseFakeManager { get; set; }
+
         /// <inheritdoc/>
         public Task<bool> RequestAndLaunchReviewAsync()
         {
@@ -32,7 +39,7 @@ namespace AndroidReviewBridge.Interop
             {
                 try
                 {
-                    _bridge.RequestAndLaunch(activity, new ReviewListenerImpl(
+                    _bridge.RequestAndLaunch(activity, UseFakeManager, new ReviewListenerImpl(
                         onComplete: () => tcs.TrySetResult(true),
                         onFailed: _ => tcs.TrySetResult(false)));
                 }
