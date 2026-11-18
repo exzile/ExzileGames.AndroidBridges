@@ -15,6 +15,11 @@ on:
 jobs:
   publish:
     runs-on: ubuntu-latest
+    # Trusted Publishing: the job asks GitHub for an OIDC token, which nuget.org trades for a
+    # short-lived API key (policy "ExzileGames.AndroidBridges CI" on nuget.org, owner jpongallo)
+    permissions:
+      contents: read
+      id-token: write
 
     steps:
       - uses: actions/checkout@v4
@@ -114,9 +119,15 @@ jobs:
             -p:Version=${{ steps.version.outputs.version }} \
             -o ./artifacts
 
+      - name: Log in to NuGet.org (Trusted Publishing)
+        id: nuget-login
+        uses: NuGet/login@v1
+        with:
+          user: jpongallo
+
       - name: Push to NuGet.org
         run: |
           dotnet nuget push ./artifacts/*.nupkg \
-            --api-key ${{ secrets.NUGET_API_KEY }} \
+            --api-key ${{ steps.nuget-login.outputs.NUGET_API_KEY }} \
             --source https://api.nuget.org/v3/index.json \
             --skip-duplicate
